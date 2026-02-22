@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GRID CHAOS — RACE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red: #ff2b2b;
+      --yellow: #ffe600;
+      --green: #00ff6a;
+      --white: #f5f5f5;
+      --black: #0a0a0a;
+      --grey: #1a1a1a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'VT323', monospace;
+      font-size: 20px;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      padding: 30px 20px 20px;
+      border-bottom: 4px solid var(--red);
+    }
+
+    header h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(16px, 4vw, 32px);
+      color: var(--red);
+      text-shadow: 4px 4px 0 var(--yellow);
+    }
+
+    .race-info {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: var(--yellow);
+      margin-top: 10px;
+      letter-spacing: 2px;
+    }
+
+    /* ── LAP COUNTER ── */
+    .lap-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 16px;
+      background: var(--grey);
+      border-bottom: 4px solid #333;
+    }
+
+    .lap-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: var(--white);
+    }
+
+    .lap-num {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 20px;
+      color: var(--yellow);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* ── TRACK CONTAINER ── */
+    .track-container {
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .track-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .driver-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: var(--white);
+      width: 90px;
+      flex-shrink: 0;
+      line-height: 1.6;
+    }
+
+    .driver-num-badge {
+      display: block;
+      color: var(--yellow);
+      font-size: 10px;
+    }
+
+    .track-lane {
+      flex: 1;
+      height: 44px;
+      background: #111;
+      border: 3px solid #2a2a2a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* finish line stripes */
+    .track-lane::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 12px;
+      background: repeating-linear-gradient(
+        180deg,
+        #fff 0, #fff 5px,
+        #000 5px, #000 10px
+      );
+      opacity: 0.7;
+    }
+
+    .track-lane::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0; right: 12px;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, #333 0, #333 20px, transparent 20px, transparent 40px);
+      transform: translateY(-50%);
+    }
+
+    .car {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 28px;
+      left: 0%;
+      transition: left 0.3s ease;
+      filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.8));
+      z-index: 2;
+    }
+
+    .position-badge {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #333;
+      color: #666;
+      border: 2px solid #333;
+    }
+
+    .position-badge.p1 { background: var(--yellow); color: var(--black); border-color: var(--yellow); }
+    .position-badge.p2 { background: #aaa; color: var(--black); border-color: #aaa; }
+    .position-badge.p3 { background: #cd7f32; color: var(--black); border-color: #cd7f32; }
+
+    /* ── START BUTTON ── */
+    .controls {
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .start-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      padding: 20px 48px;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      cursor: pointer;
+      box-shadow: 6px 6px 0 var(--yellow);
+      transition: transform 0.05s, box-shadow 0.05s;
+      display: inline-block;
+    }
+
+    .start-btn:hover {
+      transform: translate(3px,3px);
+      box-shadow: 3px 3px 0 var(--yellow);
+    }
+
+    .start-btn:disabled {
+      background: #333;
+      color: #666;
+      box-shadow: 4px 4px 0 #222;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      color: var(--green);
+      padding: 10px;
+      min-height: 36px;
+      animation: blink-status 0.5s step-end infinite;
+    }
+
+    @keyframes blink-status { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* ── RESULTS OVERLAY ── */
+    .results-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .results-overlay.show { display: flex; }
+
+    .results-box {
+      background: var(--grey);
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 -4px 0 var(--yellow), 4px 0 0 var(--yellow), 0 4px 0 var(--yellow), -4px 0 0 var(--yellow);
+      text-align: center;
+    }
+
+    .results-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 18px;
+      color: var(--yellow);
+      margin-bottom: 8px;
+      text-shadow: 3px 3px 0 var(--red);
+    }
+
+    .results-subtitle {
+      font-size: 20px;
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .podium {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .podium-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      background: #000;
+    }
+
+    .podium-row.first { border: 3px solid var(--yellow); }
+    .podium-row.second { border: 3px solid #aaa; }
+    .podium-row.third { border: 3px solid #cd7f32; }
+
+    .podium-pos {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 20px;
+    }
+
+    .podium-row.first .podium-pos { color: var(--yellow); }
+    .podium-row.second .podium-pos { color: #aaa; }
+    .podium-row.third .podium-pos { color: #cd7f32; }
+
+    .podium-car { font-size: 32px; }
+
+    .podium-name {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: var(--white);
+      line-height: 1.8;
+      text-align: left;
+    }
+
+    .podium-name span {
+      display: block;
+      color: #888;
+      font-size: 8px;
+    }
+
+    .full-results {
+      font-size: 18px;
+      color: #888;
+      margin-bottom: 24px;
+      line-height: 2;
+      text-align: left;
+    }
+
+    .full-results strong {
+      color: var(--white);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+    }
+
+    .again-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      padding: 16px 32px;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 var(--yellow);
+      transition: transform 0.05s, box-shadow 0.05s;
+    }
+
+    .again-btn:hover {
+      transform: translate(2px,2px);
+      box-shadow: 2px 2px 0 var(--yellow);
+    }
+
+    /* confetti */
+    .confetti-piece {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      top: -10px;
+      animation: fall linear forwards;
+      z-index: 200;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🏁 GRID CHAOS</h1>
+  <p class="race-info">// RACE SIMULATION — ALL MACHINES EQUAL — CHAOS DECIDES //</p>
+</header>
+
+<div class="lap-bar">
+  <span class="lap-label">LAP</span>
+  <span class="lap-num" id="lapNum">0 / 10</span>
+  <span class="lap-label">CHAOS ENGINE</span>
+  <span class="lap-num" id="chaosVal" style="color:var(--red)">---</span>
+</div>
+
+<div class="track-container" id="trackContainer"></div>
+
+<div class="controls">
+  <div class="status-bar" id="statusBar">▶ PRESS START TO RACE</div>
+  <button class="start-btn" id="startBtn" onclick="startRace()">▶ START RACE</button>
+</div>
+
+<!-- RESULTS -->
+<div class="results-overlay" id="resultsOverlay">
+  <div class="results-box">
+    <p class="results-title">🏆 RACE OVER!</p>
+    <p class="results-subtitle">CHAOS HAS SPOKEN</p>
+    <div class="podium" id="podiumDisplay"></div>
+    <div class="full-results" id="fullResults"></div>
+    <button class="again-btn" onclick="resetRace()">🔄 RACE AGAIN</button>
+  </div>
+</div>
+
+<script>
+  const DRIVERS = [
+    { num: '#01', name: 'DRIVER 01', emoji: '🏎️' },
+    { num: '#07', name: 'DRIVER 07', emoji: '🏎️' },
+    { num: '#19', name: 'DRIVER 19', emoji: '🏎️' },
+    { num: '#33', name: 'DRIVER 33', emoji: '🏎️' },
+    { num: '#42', name: 'DRIVER 42', emoji: '🏎️' },
+    { num: '#55', name: 'DRIVER 55', emoji: '🏎️' },
+    { num: '#63', name: 'DRIVER 63', emoji: '🏎️' },
+    { num: '#77', name: 'DRIVER 77', emoji: '🏎️' },
+    { num: '#88', name: 'DRIVER 88', emoji: '🏎️' },
+    { num: '#99', name: 'DRIVER 99', emoji: '🏎️' },
+  ];
+
+  const TOTAL_LAPS = 10;
+  let raceInterval = null;
+  let currentLap = 0;
+  let progress = []; // 0-100 for each driver
+  let finished = []; // order of finish
+
+  function buildTrack() {
+    const container = document.getElementById('trackContainer');
+    container.innerHTML = '';
+    progress = DRIVERS.map(() => 0);
+    finished = [];
+
+    DRIVERS.forEach((d, i) => {
+      const row = document.createElement('div');
+      row.className = 'track-row';
+      row.id = `row-${i}`;
+      row.innerHTML = `
+        <div class="driver-label">
+          <span class="driver-num-badge">${d.num}</span>
+          ${d.name}
+        </div>
+        <div class="track-lane">
+          <div class="car" id="car-${i}">${d.emoji}</div>
+        </div>
+        <div class="position-badge" id="pos-${i}">—</div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function updatePositions() {
+    // Sort by progress descending
+    const order = DRIVERS.map((d, i) => ({ i, p: progress[i] }))
+      .sort((a, b) => b.p - a.p);
+
+    order.forEach((item, rank) => {
+      const badge = document.getElementById(`pos-${item.i}`);
+      badge.className = 'position-badge';
+      badge.textContent = `P${rank + 1}`;
+      if (rank === 0) badge.classList.add('p1');
+      else if (rank === 1) badge.classList.add('p2');
+      else if (rank === 2) badge.classList.add('p3');
+    });
+  }
+
+  function startRace() {
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('statusBar').textContent = '🔴 LIGHTS OUT... AND AWAY WE GO!';
+    currentLap = 0;
+    buildTrack();
+
+    setTimeout(() => {
+      raceInterval = setInterval(runLap, 800);
+    }, 1200);
+  }
+
+  function runLap() {
+    if (currentLap >= TOTAL_LAPS) {
+      clearInterval(raceInterval);
+      showResults();
+      return;
+    }
+
+    currentLap++;
+    const chaos = Math.floor(Math.random() * 100);
+    document.getElementById('lapNum').textContent = `${currentLap} / ${TOTAL_LAPS}`;
+    document.getElementById('chaosVal').textContent = chaos;
+    document.getElementById('statusBar').textContent = `⚡ LAP ${currentLap} — CHAOS: ${chaos}`;
+
+    // Each driver gets a random chunk of progress this lap
+    DRIVERS.forEach((d, i) => {
+      if (progress[i] >= 100) return;
+
+      // Pure RNG progress per lap
+      const gain = Math.random() * (100 / TOTAL_LAPS) * 1.8;
+      progress[i] = Math.min(100, progress[i] + gain);
+
+      // Move car visually (leave 12px for finish line)
+      const pct = (progress[i] / 100) * 88;
+      document.getElementById(`car-${i}`).style.left = `${pct}%`;
+
+      // Check if finished
+      if (progress[i] >= 100 && !finished.includes(i)) {
+        finished.push(i);
+      }
+    });
+
+    updatePositions();
+
+    // If all finished early
+    if (finished.length === DRIVERS.length) {
+      clearInterval(raceInterval);
+      currentLap = TOTAL_LAPS;
+      showResults();
+    }
+  }
+
+  function showResults() {
+    document.getElementById('statusBar').textContent = '🏁 RACE FINISHED!';
+
+    // Final order: finished array + remaining sorted by progress
+    const remaining = DRIVERS.map((d, i) => i)
+      .filter(i => !finished.includes(i))
+      .sort((a, b) => progress[b] - progress[a]);
+
+    const finalOrder = [...finished, ...remaining];
+
+    // Podium
+    const medals = ['🥇', '🥈', '🥉'];
+    const podiumClasses = ['first', 'second', 'third'];
+    let podiumHTML = '';
+    for (let r = 0; r < 3; r++) {
+      const d = DRIVERS[finalOrder[r]];
+      podiumHTML += `
+        <div class="podium-row ${podiumClasses[r]}">
+          <span class="podium-pos">${medals[r]}</span>
+          <span class="podium-car">${d.emoji}</span>
+          <div class="podium-name">${d.name}<span>${d.num}</span></div>
+        </div>`;
+    }
+    document.getElementById('podiumDisplay').innerHTML = podiumHTML;
+
+    // Full results
+    let fullHTML = '';
+    finalOrder.forEach((dIdx, rank) => {
+      const d = DRIVERS[dIdx];
+      fullHTML += `<div><strong>P${rank + 1}</strong> &nbsp; ${d.num} — ${d.name}</div>`;
+    });
+    document.getElementById('fullResults').innerHTML = fullHTML;
+
+    setTimeout(() => {
+      document.getElementById('resultsOverlay').classList.add('show');
+      spawnConfetti();
+    }, 600);
+  }
+
+  function resetRace() {
+    document.getElementById('resultsOverlay').classList.remove('show');
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('lapNum').textContent = '0 / 10';
+    document.getElementById('chaosVal').textContent = '---';
+    document.getElementById('statusBar').textContent = '▶ PRESS START TO RACE';
+    buildTrack();
+    // remove confetti
+    document.querySelectorAll('.confetti-piece').forEach(e => e.remove());
+  }
+
+  function spawnConfetti() {
+    const colors = ['#ff2b2b', '#ffe600', '#00ff6a', '#fff', '#ff8800'];
+    for (let i = 0; i < 60; i++) {
+      setTimeout(() => {
+        const c = document.createElement('div');
+        c.className = 'confetti-piece';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+        c.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 4000);
+      }, i * 30);
+    }
+  }
+
+  // Init
+  buildTrack();
+</script>
+</body>
+</html>
