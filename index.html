@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GRID CHAOS — Season 1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --red:#ff2b2b; --yellow:#ffe600; --green:#00ff6a; --white:#f5f5f5; --black:#0a0a0a; --grey:#1a1a1a; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--black); color:var(--white); font-family:'VT323',monospace; font-size:20px; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px); pointer-events:none; z-index:999; }
+
+    /* NAV */
+    nav { display:flex; justify-content:space-between; align-items:center; padding:18px 32px; border-bottom:4px solid var(--red); background:var(--black); position:sticky; top:0; z-index:100; flex-wrap:wrap; gap:12px; }
+    .nav-logo { font-family:'Press Start 2P',monospace; font-size:13px; color:var(--red); text-shadow:3px 3px 0 var(--yellow); text-decoration:none; }
+    nav ul { list-style:none; display:flex; gap:24px; flex-wrap:wrap; }
+    nav ul li a { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--white); text-decoration:none; transition:color 0.1s; }
+    nav ul li a:hover { color:var(--yellow); }
+
+    /* HERO */
+    .hero { min-height:90vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:60px 20px; position:relative; overflow:hidden; }
+    .hero::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,43,43,0.05) 60px,rgba(255,43,43,0.05) 62px),repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,230,0,0.03) 60px,rgba(255,230,0,0.03) 62px); }
+    .hero-eyebrow { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--yellow); letter-spacing:4px; margin-bottom:20px; animation:blink 1s step-end infinite; position:relative; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .hero-title { font-family:'Press Start 2P',monospace; font-size:clamp(28px,6vw,72px); color:var(--white); line-height:1.4; text-shadow:6px 6px 0 var(--red),12px 12px 0 rgba(255,43,43,0.3); margin-bottom:16px; position:relative; animation:slidein 0.6s steps(8) both; }
+    @keyframes slidein { from{transform:translateY(-40px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .hero-sub { font-size:26px; color:var(--yellow); margin-bottom:40px; max-width:600px; position:relative; }
+    .car-track { width:100%; max-width:680px; height:56px; position:relative; margin:20px 0 40px; border-top:4px solid #333; border-bottom:4px solid #333; overflow:hidden; background:#111; }
+    .car-track::before { content:''; position:absolute; top:50%; left:0; right:0; height:3px; background:repeating-linear-gradient(90deg,var(--white) 0,var(--white) 20px,transparent 20px,transparent 40px); transform:translateY(-50%); }
+    .pixel-car { position:absolute; top:50%; transform:translateY(-50%) scaleX(-1); font-size:28px; animation:drive 3s linear infinite; }
+    .pixel-car:nth-child(2){animation-delay:1s;font-size:24px}
+    .pixel-car:nth-child(3){animation-delay:2s;font-size:26px}
+    @keyframes drive { from{left:-60px} to{left:110%} }
+    .btn-group { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; position:relative; }
+    .cta-btn { font-family:'Press Start 2P',monospace; font-size:11px; padding:16px 28px; background:var(--red); color:var(--white); border:none; cursor:pointer; text-decoration:none; display:inline-block; box-shadow:6px 6px 0 var(--yellow); transition:transform 0.05s,box-shadow 0.05s; }
+    .cta-btn:hover { transform:translate(3px,3px); box-shadow:3px 3px 0 var(--yellow); }
+    .cta-btn.outline { background:var(--black); color:var(--yellow); border:3px solid var(--yellow); box-shadow:6px 6px 0 var(--red); }
+    .cta-btn.outline:hover { transform:translate(3px,3px); box-shadow:3px 3px 0 var(--red); }
+
+    /* TICKER */
+    .ticker { background:var(--red); padding:10px 0; overflow:hidden; border-top:4px solid var(--yellow); border-bottom:4px solid var(--yellow); }
+    .ticker-inner { display:flex; gap:60px; animation:scroll 18s linear infinite; white-space:nowrap; }
+    @keyframes scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    .ticker-inner span { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--yellow); }
+
+    /* TEAMS GRID */
+    .teams-section { padding:80px 40px; max-width:1200px; margin:0 auto; }
+    .section-title { font-family:'Press Start 2P',monospace; font-size:clamp(14px,2.5vw,24px); color:var(--yellow); text-align:center; margin-bottom:50px; }
+    .section-title::after { content:''; display:block; width:60px; height:4px; background:var(--red); margin:14px auto 0; }
+    .teams-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+    .team-card { background:var(--grey); padding:20px; position:relative; transition:transform 0.1s; border-left:5px solid; }
+    .team-card:hover { transform:translate(-3px,-3px); }
+    .team-emoji { font-size:36px; display:block; margin-bottom:10px; }
+    .team-name { font-family:'Press Start 2P',monospace; font-size:9px; margin-bottom:6px; }
+    .team-driver { font-size:18px; color:#aaa; }
+    .team-driver span { color:var(--white); }
+
+    /* FEATURES */
+    .features { padding:80px 40px; background:var(--grey); border-top:4px solid var(--red); border-bottom:4px solid var(--red); }
+    .features-inner { max-width:1100px; margin:0 auto; }
+    .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:24px; }
+    .feature-card { background:var(--black); padding:28px; border-left:4px solid var(--red); transition:border-color 0.1s,transform 0.1s; }
+    .feature-card:hover { border-color:var(--yellow); transform:translateY(-4px); }
+    .feature-icon { font-size:40px; display:block; margin-bottom:14px; }
+    .feature-title { font-family:'Press Start 2P',monospace; font-size:10px; color:var(--red); margin-bottom:12px; line-height:1.8; }
+    .feature-desc { font-size:19px; color:#aaa; line-height:1.6; }
+
+    /* HOW IT WORKS */
+    .how-section { padding:80px 40px; max-width:900px; margin:0 auto; text-align:center; }
+    .steps { display:flex; justify-content:center; gap:0; flex-wrap:wrap; margin-top:40px; }
+    .step { display:flex; flex-direction:column; align-items:center; gap:10px; flex:1; min-width:140px; position:relative; }
+    .step:not(:last-child)::after { content:'▶'; position:absolute; right:-10px; top:18px; font-family:'Press Start 2P',monospace; font-size:12px; color:var(--red); }
+    .step-num { font-family:'Press Start 2P',monospace; font-size:20px; color:var(--black); background:var(--yellow); width:44px; height:44px; display:flex; align-items:center; justify-content:center; }
+    .step-label { font-family:'Press Start 2P',monospace; font-size:7px; color:var(--white); line-height:1.8; text-align:center; }
+
+    /* FOOTER */
+    footer { border-top:4px solid var(--red); padding:40px; text-align:center; }
+    .footer-logo { font-family:'Press Start 2P',monospace; font-size:14px; color:var(--red); text-shadow:3px 3px 0 var(--yellow); margin-bottom:16px; display:block; }
+    footer p { font-size:18px; color:#444; }
+    footer .links { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:20px; }
+    footer .links a { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--yellow); text-decoration:none; }
+    footer .links a:hover { color:var(--red); }
+
+    @media(max-width:600px) { nav ul{display:none} .teams-section,.features,.how-section{padding:50px 20px} }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">🏁 GRID CHAOS</a>
+  <ul>
+    <li><a href="#teams">TEAMS</a></li>
+    <li><a href="signup.html">SIGN UP</a></li>
+    <li><a href="results.html">RESULTS</a></li>
+    <li><a href="standings.html">STANDINGS</a></li>
+    <li><a href="race.html">RACE</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <p class="hero-eyebrow">▶ SEASON 1 NOW OPEN ◀</p>
+  <h1 class="hero-title">GRID<br>CHAOS</h1>
+  <p class="hero-sub">F1 Racing. Equal Machines. Zero Control. Pure Chaos.</p>
+  <div class="car-track">
+    <span class="pixel-car">🏎️</span>
+    <span class="pixel-car">🏎️</span>
+    <span class="pixel-car">🏎️</span>
+  </div>
+  <div class="btn-group">
+    <a href="signup.html" class="cta-btn">▶ JOIN THE GRID</a>
+    <a href="race.html" class="cta-btn outline">🏁 WATCH RACE</a>
+  </div>
+</section>
+
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>🏁 SEASON 1 UNDERWAY</span><span>🎲 CHAOS ENGINE ACTIVE</span>
+    <span>⚡ ALL MACHINES EQUAL</span><span>🏆 10 TEAMS — 10 DRIVERS</span>
+    <span>📸 FOLLOW @_.mattx7</span><span>🎰 FORTUNE DECIDES ALL</span>
+    <span>🏁 SEASON 1 UNDERWAY</span><span>🎲 CHAOS ENGINE ACTIVE</span>
+    <span>⚡ ALL MACHINES EQUAL</span><span>🏆 10 TEAMS — 10 DRIVERS</span>
+    <span>📸 FOLLOW @_.mattx7</span><span>🎰 FORTUNE DECIDES ALL</span>
+  </div>
+</div>
+
+<!-- TEAMS -->
+<section class="teams-section" id="teams">
+  <h2 class="section-title">// THE 10 TEAMS</h2>
+  <div class="teams-grid" id="teamsGrid"></div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="features-inner">
+    <h2 class="section-title">// GAME FEATURES</h2>
+    <div class="features-grid">
+      <div class="feature-card"><span class="feature-icon">🎲</span><h3 class="feature-title">PURE RNG RESULTS</h3><p class="feature-desc">No skill, no strategy — the Chaos Engine decides everything. Anyone can win. Anyone can crash out.</p></div>
+      <div class="feature-card"><span class="feature-icon">⚙️</span><h3 class="feature-title">EQUAL MACHINERY</h3><p class="feature-desc">Every car is 100% identical. Same engine, same aero, same tyres. Luck is the only advantage.</p></div>
+      <div class="feature-card"><span class="feature-icon">🤖</span><h3 class="feature-title">AI DRIVERS</h3><p class="feature-desc">AI controls every car. You just own your driver and watch the chaos unfold each race weekend.</p></div>
+      <div class="feature-card"><span class="feature-icon">📊</span><h3 class="feature-title">F1 POINTS SYSTEM</h3><p class="feature-desc">Real F1-style points across a full season. Track the championship and see who gets lucky most often.</p></div>
+      <div class="feature-card"><span class="feature-icon">🏆</span><h3 class="feature-title">SEASON CHAMPIONSHIP</h3><p class="feature-desc">Race by race, points accumulate. One lucky driver will be crowned Season 1 Champion.</p></div>
+      <div class="feature-card"><span class="feature-icon">📸</span><h3 class="feature-title">INSTAGRAM LIVE</h3><p class="feature-desc">Follow @_.mattx7 for race day announcements, results drops and championship updates.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <h2 class="section-title">// HOW IT WORKS</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><p class="step-label">FOLLOW<br>@_.MATTX7</p></div>
+    <div class="step"><div class="step-num">2</div><p class="step-label">SIGN UP<br>WITH YOUR IG</p></div>
+    <div class="step"><div class="step-num">3</div><p class="step-label">GET ASSIGNED<br>A TEAM</p></div>
+    <div class="step"><div class="step-num">4</div><p class="step-label">WATCH<br>THE RACE</p></div>
+    <div class="step"><div class="step-num">5</div><p class="step-label">CHECK<br>RESULTS</p></div>
+  </div>
+</section>
+
+<footer>
+  <span class="footer-logo">🏁 GRID CHAOS</span>
+  <p>© 2025 GRID CHAOS — SEASON 1</p>
+  <div class="links">
+    <a href="signup.html">SIGN UP</a>
+    <a href="results.html">RESULTS</a>
+    <a href="standings.html">STANDINGS</a>
+    <a href="https://instagram.com/_.mattx7" target="_blank">INSTAGRAM</a>
+  </div>
+</footer>
+
+<script>
+  const TEAMS = {
+    redbull:  {name:'RED BULL',  color:'#3671C6', badge:'🐂'},
+    ferrari:  {name:'FERRARI',   color:'#E8002D', badge:'🐴'},
+    mercedes: {name:'MERCEDES',  color:'#27F4D2', badge:'⭐'},
+    mclaren:  {name:'McLAREN',   color:'#FF8000', badge:'🦁'},
+    aston:    {name:'ASTON',     color:'#229971', badge:'🏹'},
+    alpine:   {name:'ALPINE',    color:'#0093CC', badge:'❄️'},
+    haas:     {name:'HAAS',      color:'#B6BABD', badge:'🦅'},
+    rb:       {name:'RB',        color:'#6692FF', badge:'🔵'},
+    williams: {name:'WILLIAMS',  color:'#64C4FF', badge:'🦋'},
+    sauber:   {name:'SAUBER',    color:'#52E252', badge:'🍀'},
+  };
+
+  const drivers = JSON.parse(localStorage.getItem('gc_drivers') || 'null') || [];
+  const grid = document.getElementById('teamsGrid');
+
+  Object.entries(TEAMS).forEach(([key, team]) => {
+    const driver = drivers.find(d => d.team === key);
+    const card = document.createElement('div');
+    card.className = 'team-card';
+    card.style.borderLeftColor = team.color;
+    card.innerHTML = `
+      <span class="team-emoji">${team.badge}</span>
+      <div class="team-name" style="color:${team.color}">${team.name}</div>
+      <div class="team-driver">
+        ${driver ? `<span>${driver.ig}</span> ${driver.num}` : '<span style="color:#444">— VACANT —</span>'}
+      </div>`;
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>
