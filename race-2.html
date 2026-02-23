@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GRID CHAOS — RACE DIRECTOR</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --red:#ff2b2b; --yellow:#ffe600; --green:#00ff6a; --white:#f5f5f5; --black:#0a0a0a; --grey:#1a1a1a; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--black); color:var(--white); font-family:'VT323',monospace; font-size:20px; overflow-x:hidden; min-height:100vh; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px); pointer-events:none; z-index:999; }
+
+    header { text-align:center; padding:24px 20px 16px; border-bottom:4px solid var(--red); position:relative; overflow:hidden; }
+    header::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,43,43,0.04) 60px,rgba(255,43,43,0.04) 62px); }
+    header h1 { font-family:'Press Start 2P',monospace; font-size:clamp(14px,3vw,28px); color:var(--red); text-shadow:4px 4px 0 var(--yellow); position:relative; }
+    .race-info { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--yellow); margin-top:8px; position:relative; }
+    .admin-badge { display:inline-block; font-family:'Press Start 2P',monospace; font-size:8px; background:var(--red); color:var(--white); padding:4px 10px; margin-top:6px; position:relative; }
+
+    .hud { display:flex; justify-content:center; align-items:center; gap:24px; padding:12px 20px; background:#0d0d0d; border-bottom:3px solid #222; flex-wrap:wrap; }
+    .hud-item { display:flex; flex-direction:column; align-items:center; gap:2px; }
+    .hud-label { font-family:'Press Start 2P',monospace; font-size:7px; color:#555; }
+    .hud-val { font-family:'Press Start 2P',monospace; font-size:16px; color:var(--yellow); }
+    .hud-val.red { color:var(--red); } .hud-val.green { color:var(--green); }
+
+    .lights-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:200; align-items:center; justify-content:center; flex-direction:column; gap:30px; }
+    .lights-overlay.show { display:flex; }
+    .lights-row { display:flex; gap:20px; }
+    .light-bulb { width:50px; height:50px; border-radius:50%; background:#1a0000; border:3px solid #400000; transition:background 0.1s,border-color 0.1s,box-shadow 0.1s; }
+    .light-bulb.on { background:var(--red); border-color:#ff6666; box-shadow:0 0 20px var(--red),0 0 40px rgba(255,43,43,0.5); }
+    .lights-text { font-family:'Press Start 2P',monospace; font-size:clamp(14px,3vw,24px); color:var(--white); letter-spacing:4px; }
+    .go-text { font-family:'Press Start 2P',monospace; font-size:clamp(28px,6vw,60px); color:var(--green); text-shadow:0 0 30px var(--green); display:none; animation:goFlash 0.4s steps(2) 3; }
+    @keyframes goFlash { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .track-container { padding:16px 20px; max-width:1000px; margin:0 auto; }
+    .track-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; transition:transform 0.15s ease; }
+    .track-row.leader { transform:scaleY(1.06); }
+
+    /* Team badge on left */
+    .team-badge {
+      width:44px; height:44px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; border-radius:3px;
+      border-bottom:4px solid rgba(0,0,0,0.4);
+      position:relative; overflow:hidden;
+    }
+    .team-badge::after {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 60%);
+    }
+
+    .driver-label { font-family:'Press Start 2P',monospace; font-size:7px; color:#888; width:80px; flex-shrink:0; line-height:1.8; transition:color 0.2s; }
+    .driver-label.leading { color:var(--yellow); }
+    .driver-num-badge { display:block; font-size:9px; }
+    .driver-team-name { display:block; font-size:6px; color:#555; margin-top:1px; }
+
+    .track-lane { flex:1; height:44px; border:2px solid #1e1e1e; position:relative; overflow:hidden; border-radius:2px; transition:border-color 0.2s,box-shadow 0.2s; background:#0d0d0d; }
+    .track-lane::before { content:''; position:absolute; top:50%; left:0; right:14px; height:2px; background:repeating-linear-gradient(90deg,#222 0,#222 20px,transparent 20px,transparent 40px); transform:translateY(-50%); animation:roadMove 0.5s linear infinite; }
+    @keyframes roadMove { from{background-position:0 0} to{background-position:40px 0} }
+    .track-lane::after { content:''; position:absolute; right:0; top:0; bottom:0; width:14px; background:repeating-linear-gradient(180deg,#fff 0,#fff 5px,#000 5px,#000 10px); opacity:0.8; z-index:3; }
+    .track-lane.boosting { box-shadow:inset 0 0 14px rgba(255,200,0,0.08); }
+
+    /* Team colored left border on lane */
+    .track-lane-inner { position:absolute; left:0; top:0; bottom:0; width:4px; z-index:2; }
+
+    .car-wrap { position:absolute; top:50%; transform:translateY(-50%); left:0%; z-index:2; display:flex; align-items:center; will-change:left; }
+    .exhaust { width:14px; height:7px; background:linear-gradient(to left,transparent,rgba(255,140,40,0.7)); border-radius:4px; opacity:0; flex-shrink:0; }
+    .car-wrap.boosting .exhaust { opacity:1; animation:exhaustPulse 0.15s steps(2) infinite; }
+    @keyframes exhaustPulse { 0%,100%{opacity:0.9;width:22px} 50%{opacity:0.3;width:8px} }
+
+    /* Car colored by team */
+    .car-emoji { font-size:24px; display:block; transition:filter 0.15s; transform:scaleX(-1); }
+    .car-wrap.boosting .car-emoji { filter:drop-shadow(0 0 6px rgba(255,200,0,0.8)); }
+
+    .spark { position:absolute; width:3px; height:3px; border-radius:50%; pointer-events:none; animation:sparkFly 0.4s linear forwards; z-index:5; }
+    @keyframes sparkFly { 0%{opacity:1;transform:translate(0,0)} 100%{opacity:0;transform:translate(-28px,var(--dy))} }
+
+    .position-badge { font-family:'Press Start 2P',monospace; font-size:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#1a1a1a; color:#444; border:2px solid #222; transition:all 0.2s; }
+    .position-badge.p1 { background:var(--yellow); color:var(--black); border-color:var(--yellow); box-shadow:0 0 10px rgba(255,230,0,0.5); }
+    .position-badge.p2 { background:#aaa; color:var(--black); border-color:#aaa; }
+    .position-badge.p3 { background:#cd7f32; color:var(--black); border-color:#cd7f32; }
+
+    @keyframes overtakeFlash { 0%{background:rgba(255,230,0,0.2)} 100%{background:transparent} }
+    .track-row.overtaking { animation:overtakeFlash 0.5s ease-out; }
+
+    .controls { text-align:center; padding:16px 20px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+    .status-bar { font-family:'Press Start 2P',monospace; font-size:10px; color:var(--green); min-height:28px; }
+    .status-bar.warning { color:var(--red); animation:blinkStatus 0.5s step-end infinite; }
+    @keyframes blinkStatus { 0%,100%{opacity:1} 50%{opacity:0} }
+    .start-btn { font-family:'Press Start 2P',monospace; font-size:13px; padding:18px 44px; background:var(--red); color:var(--white); border:none; cursor:pointer; box-shadow:6px 6px 0 var(--yellow); transition:transform 0.05s,box-shadow 0.05s; }
+    .start-btn:hover { transform:translate(3px,3px); box-shadow:3px 3px 0 var(--yellow); }
+    .start-btn:disabled { background:#2a2a2a; color:#444; box-shadow:4px 4px 0 #111; cursor:not-allowed; transform:none; }
+
+    .nav-links { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; padding:8px 20px 28px; }
+    .nav-link { font-family:'Press Start 2P',monospace; font-size:9px; padding:10px 16px; background:var(--grey); color:var(--yellow); text-decoration:none; border:3px solid var(--yellow); transition:background 0.1s,color 0.1s; }
+    .nav-link:hover { background:var(--yellow); color:var(--black); }
+
+    /* Results */
+    .results-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center; flex-direction:column; padding:20px; overflow-y:auto; }
+    .results-overlay.show { display:flex; }
+    .results-box { background:var(--grey); padding:32px; max-width:540px; width:100%; box-shadow:0 -4px 0 var(--yellow),4px 0 0 var(--yellow),0 4px 0 var(--yellow),-4px 0 0 var(--yellow); text-align:center; animation:slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .results-title { font-family:'Press Start 2P',monospace; font-size:16px; color:var(--yellow); margin-bottom:6px; text-shadow:3px 3px 0 var(--red); }
+    .results-subtitle { font-size:20px; color:#888; margin-bottom:24px; }
+    .podium { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+    .podium-row { display:flex; align-items:center; gap:12px; padding:12px 14px; background:#000; animation:podiumReveal 0.4s ease both; }
+    @keyframes podiumReveal { from{transform:translateX(-20px);opacity:0} to{transform:translateX(0);opacity:1} }
+    .podium-row.first { border:3px solid var(--yellow); }
+    .podium-row.second { border:3px solid #aaa; }
+    .podium-row.third { border:3px solid #cd7f32; }
+    .podium-pos { font-family:'Press Start 2P',monospace; font-size:18px; }
+    .podium-row.first .podium-pos { color:var(--yellow); }
+    .podium-row.second .podium-pos { color:#aaa; }
+    .podium-row.third .podium-pos { color:#cd7f32; }
+    .podium-team-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+    .podium-info { flex:1; text-align:left; }
+    .podium-name-txt { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--white); }
+    .podium-sub { font-size:16px; color:#666; margin-top:2px; }
+    .podium-pts { font-family:'Press Start 2P',monospace; font-size:10px; color:var(--yellow); }
+    .full-results { font-size:17px; color:#888; margin-bottom:20px; line-height:2.2; text-align:left; max-height:180px; overflow-y:auto; }
+    .full-results strong { color:var(--white); font-family:'Press Start 2P',monospace; font-size:8px; }
+    .full-results .pts { color:var(--yellow); }
+    .full-results .team-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+    .publish-btn { font-family:'Press Start 2P',monospace; font-size:10px; padding:14px 28px; background:var(--green); color:var(--black); border:none; cursor:pointer; box-shadow:4px 4px 0 #007733; margin-bottom:12px; width:100%; transition:transform 0.05s; }
+    .publish-btn:hover { transform:translate(2px,2px); }
+    .again-btn { font-family:'Press Start 2P',monospace; font-size:10px; padding:14px 28px; background:var(--red); color:var(--white); border:none; cursor:pointer; box-shadow:4px 4px 0 var(--yellow); width:100%; transition:transform 0.05s; }
+    .again-btn:hover { transform:translate(2px,2px); }
+    .published-msg { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--green); margin-bottom:12px; display:none; line-height:1.8; }
+
+    .confetti-piece { position:fixed; top:-10px; animation:fall linear forwards; z-index:300; }
+    @keyframes fall { to{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+    /* LOGIN */
+    .login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:24px; padding:40px; }
+    .login-title { font-family:'Press Start 2P',monospace; font-size:clamp(14px,3vw,24px); color:var(--red); text-shadow:4px 4px 0 var(--yellow); text-align:center; }
+    .login-sub { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--yellow); }
+    .login-box { background:var(--grey); padding:40px; max-width:420px; width:100%; box-shadow:0 -4px 0 var(--red),4px 0 0 var(--red),0 4px 0 var(--red),-4px 0 0 var(--red); display:flex; flex-direction:column; gap:16px; }
+    .login-label { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--yellow); }
+    .login-input { background:#000; border:3px solid #333; color:var(--white); font-family:'VT323',monospace; font-size:24px; padding:12px 14px; width:100%; outline:none; }
+    .login-input:focus { border-color:var(--red); }
+    .login-btn { font-family:'Press Start 2P',monospace; font-size:11px; padding:16px; background:var(--red); color:var(--white); border:none; cursor:pointer; box-shadow:5px 5px 0 var(--yellow); transition:transform 0.05s,box-shadow 0.05s; }
+    .login-btn:hover { transform:translate(2px,2px); box-shadow:3px 3px 0 var(--yellow); }
+    .login-err { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--red); display:none; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+    .race-content { display:none; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <p class="login-title">🏁 RACE DIRECTOR</p>
+  <p class="login-sub">GRID CHAOS — ADMIN ONLY</p>
+  <div class="login-box">
+    <p class="login-label">🔐 ENTER PASSWORD</p>
+    <input class="login-input" type="password" id="racePwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRaceLogin()"/>
+    <p class="login-err" id="raceLoginErr">❌ WRONG PASSWORD!</p>
+    <button class="login-btn" onclick="doRaceLogin()">▶ ACCESS RACE</button>
+  </div>
+</div>
+
+<!-- RACE CONTENT -->
+<div class="race-content" id="raceContent">
+<header>
+  <h1>🏁 GRID CHAOS</h1>
+  <p class="race-info">SEASON 1 — RACE DIRECTOR PANEL</p>
+  <span class="admin-badge">⚙ ADMIN MODE</span>
+</header>
+
+<div class="hud">
+  <div class="hud-item"><span class="hud-label">LAP</span><span class="hud-val" id="lapNum">— / 20</span></div>
+  <div class="hud-item"><span class="hud-label">RACE</span><span class="hud-val red" id="raceNum">—</span></div>
+  <div class="hud-item"><span class="hud-label">LEADER</span><span class="hud-val green" id="leaderDisplay">—</span></div>
+  <div class="hud-item"><span class="hud-label">CHAOS</span><span class="hud-val" id="chaosVal" style="color:#ff8800">---</span></div>
+</div>
+
+<div class="lights-overlay" id="lightsOverlay">
+  <p class="lights-text" id="lightsText">GET READY</p>
+  <div class="lights-row">
+    <div class="light-bulb" id="l0"></div><div class="light-bulb" id="l1"></div>
+    <div class="light-bulb" id="l2"></div><div class="light-bulb" id="l3"></div>
+    <div class="light-bulb" id="l4"></div>
+  </div>
+  <p class="go-text" id="goText">GO!</p>
+</div>
+
+<div class="track-container" id="trackContainer"></div>
+
+<div class="controls">
+  <div class="status-bar" id="statusBar">▶ PRESS START TO BEGIN RACE</div>
+  <button class="start-btn" id="startBtn" onclick="startRace()">▶ START RACE</button>
+</div>
+
+<div class="nav-links">
+  <a href="results.html" class="nav-link">📋 RESULTS</a>
+  <a href="standings.html" class="nav-link">🏆 STANDINGS</a>
+  <a href="index.html" class="nav-link">🏠 HOME</a>
+</div>
+
+<div class="results-overlay" id="resultsOverlay">
+  <div class="results-box">
+    <p class="results-title">🏆 RACE OVER!</p>
+    <p class="results-subtitle" id="raceSubtitle">SEASON 1 — RACE ?</p>
+    <div class="podium" id="podiumDisplay"></div>
+    <div class="full-results" id="fullResults"></div>
+    <p class="published-msg" id="publishedMsg">✅ RESULTS PUBLISHED!<br>SHARE THE LINK!</p>
+    <button class="publish-btn" id="publishBtn" onclick="publishResults()">📢 PUBLISH RESULTS</button>
+    <button class="again-btn" onclick="resetRace()">🔄 NEW RACE</button>
+  </div>
+</div>
+
+<script>
+  // ── 2025 F1-STYLE TEAMS ──
+  const TEAMS = {
+    redbull:    { name:'RED BULL',    color:'#3671C6', badge:'🐂', bg:'#1a2a4a' },
+    ferrari:    { name:'FERRARI',     color:'#E8002D', badge:'🐴', bg:'#3a0010' },
+    mercedes:   { name:'MERCEDES',   color:'#27F4D2', badge:'⭐', bg:'#0a2a28' },
+    mclaren:    { name:'McLAREN',     color:'#FF8000', badge:'🦁', bg:'#3a1e00' },
+    aston:      { name:'ASTON',       color:'#229971', badge:'🏹', bg:'#0a2a1e' },
+    alpine:     { name:'ALPINE',      color:'#0093CC', badge:'❄️', bg:'#001e3a' },
+    haas:       { name:'HAAS',        color:'#B6BABD', badge:'🦅', bg:'#1a1a2a' },
+    rb:         { name:'RB',          color:'#6692FF', badge:'🔵', bg:'#0a1030' },
+    williams:   { name:'WILLIAMS',    color:'#64C4FF', badge:'🦋', bg:'#001a30' },
+    sauber:     { name:'SAUBER',      color:'#52E252', badge:'🍀', bg:'#0a2a0a' },
+  };
+
+  // Clear old driver data if missing team info
+  const _saved = JSON.parse(localStorage.getItem('gc_drivers') || 'null');
+  if (_saved && !_saved[0].team) localStorage.removeItem('gc_drivers');
+
+  // ── DRIVERS — 1 per team ──
+  let DRIVERS = JSON.parse(localStorage.getItem('gc_drivers') || 'null') || [
+    { num:'#22', name:'XENVO',  ig:'@xenvo11', team:'redbull'  },
+    { num:'#07', name:'ANES',   ig:'@anes',    team:'ferrari'  },
+    { num:'#11', name:'RIKO',   ig:'@riko',    team:'mercedes' },
+    { num:'#14', name:'ZARA',   ig:'@zara',    team:'mclaren'  },
+    { num:'#33', name:'BLADE',  ig:'@blade',   team:'aston'    },
+    { num:'#44', name:'NOVA',   ig:'@nova',    team:'alpine'   },
+    { num:'#55', name:'CRIX',   ig:'@crix',    team:'haas'     },
+    { num:'#69', name:'FLUX',   ig:'@flux',    team:'rb'       },
+    { num:'#77', name:'STORM',  ig:'@storm',   team:'williams' },
+    { num:'#99', name:'GHOST',  ig:'@ghost',   team:'sauber'   },
+  ];
+
+  function getPoints(pos, total) {
+    const s=[25,18,15,12,10,8,6,4,2,1];
+    if(total<=10) return s[pos]||0;
+    return Math.round((s[pos]||0)*(total/10));
+  }
+
+  const TOTAL_LAPS=20;
+  let animFrame=null, lastTime=0, currentLap=0, lapTimer=0;
+  const LAP_MS=550;
+  let progress=[], velocity=[], finished=[], finalOrder=[], prevPos=[], raceRunning=false;
+
+  function getRaceNumber(){return(JSON.parse(localStorage.getItem('gc_results')||'[]')).length+1;}
+
+  function buildTrack(){
+    const c=document.getElementById('trackContainer');
+    c.innerHTML='';
+    progress=DRIVERS.map(()=>0);
+    velocity=DRIVERS.map(()=>0.8+Math.random()*0.6);
+    finished=[];prevPos=DRIVERS.map((_,i)=>i);
+    const rN=getRaceNumber();
+    document.getElementById('raceNum').textContent=`#${rN}`;
+    document.getElementById('raceSubtitle').textContent=`SEASON 1 — RACE ${rN}`;
+    document.getElementById('lapNum').textContent=`0 / ${TOTAL_LAPS}`;
+    document.getElementById('leaderDisplay').textContent='—';
+    document.getElementById('chaosVal').textContent='---';
+
+    DRIVERS.forEach((d,i)=>{
+      const team=TEAMS[d.team];
+      const row=document.createElement('div');
+      row.className='track-row'; row.id=`row-${i}`;
+      row.innerHTML=`
+        <div class="team-badge" style="background:${team.bg};border-left:4px solid ${team.color};">
+          ${team.badge}
+        </div>
+        <div class="driver-label" id="label-${i}">
+          <span class="driver-num-badge" style="color:${team.color}">${d.num}</span>
+          ${d.ig}
+          <span class="driver-team-name">${team.name}</span>
+        </div>
+        <div class="track-lane" id="lane-${i}">
+          <div class="track-lane-inner" style="background:${team.color};opacity:0.6;"></div>
+          <div class="car-wrap" id="car-${i}">
+            <div class="exhaust" style="background:linear-gradient(to left,transparent,${team.color}99)"></div>
+            <span class="car-emoji" style="filter:drop-shadow(0 0 4px ${team.color}99) drop-shadow(1px 1px 0 rgba(0,0,0,0.9))">🏎️</span>
+          </div>
+        </div>
+        <div class="position-badge" id="pos-${i}">—</div>`;
+      c.appendChild(row);
+    });
+  }
+
+  function updatePositions(){
+    const order=DRIVERS.map((_,i)=>({i,p:progress[i]})).sort((a,b)=>b.p-a.p);
+    const leaderId=order[0].i;
+    order.forEach(({i},rank)=>{
+      const badge=document.getElementById(`pos-${i}`);
+      badge.className='position-badge';
+      badge.textContent=`P${rank+1}`;
+      if(rank===0)badge.classList.add('p1');
+      else if(rank===1)badge.classList.add('p2');
+      else if(rank===2)badge.classList.add('p3');
+      if(prevPos[i]!==undefined&&prevPos[i]>rank){
+        const row=document.getElementById(`row-${i}`);
+        row.classList.remove('overtaking');void row.offsetWidth;row.classList.add('overtaking');
+        setTimeout(()=>row.classList.remove('overtaking'),500);
+      }
+      prevPos[i]=rank;
+      const lbl=document.getElementById(`label-${i}`);
+      const row=document.getElementById(`row-${i}`);
+      if(i===leaderId){lbl.classList.add('leading');row.classList.add('leader');}
+      else{lbl.classList.remove('leading');row.classList.remove('leader');}
+    });
+    document.getElementById('leaderDisplay').textContent=DRIVERS[leaderId].num;
+  }
+
+  function spawnSparks(laneEl,x){
+    const team=TEAMS[DRIVERS[laneEl.dataset.idx].team];
+    const colors=[team.color,'#ffe600','#fff'];
+    for(let s=0;s<2;s++){
+      const sp=document.createElement('div');sp.className='spark';
+      sp.style.left=x+'px';sp.style.top=(8+Math.random()*28)+'px';
+      sp.style.background=colors[Math.floor(Math.random()*colors.length)];
+      sp.style.setProperty('--dy',(Math.random()-0.5)*18+'px');
+      sp.style.animationDuration=(0.25+Math.random()*0.2)+'s';
+      laneEl.appendChild(sp);setTimeout(()=>sp.remove(),500);
+    }
+  }
+
+  function gameLoop(ts){
+    if(!raceRunning)return;
+    const delta=Math.min(ts-lastTime,100);lastTime=ts;lapTimer+=delta;
+    if(lapTimer>=LAP_MS&&currentLap<TOTAL_LAPS){
+      lapTimer=0;currentLap++;
+      const chaos=Math.floor(Math.random()*100);
+      document.getElementById('lapNum').textContent=`${currentLap} / ${TOTAL_LAPS}`;
+      document.getElementById('chaosVal').textContent=chaos;
+      DRIVERS.forEach((_,i)=>{
+        if(progress[i]>=100)return;
+        const surge=Math.random()>0.72,crash=Math.random()>0.93;
+        velocity[i]=crash?0.1:(0.6+Math.random()*0.9)*(surge?2.2:1.0);
+      });
+      if(currentLap===TOTAL_LAPS){
+        document.getElementById('statusBar').textContent='🏁 FINAL LAP!';
+        document.getElementById('statusBar').classList.add('warning');
+      } else {
+        document.getElementById('statusBar').textContent=`⚡ LAP ${currentLap} — CHAOS: ${chaos}`;
+        document.getElementById('statusBar').classList.remove('warning');
+      }
+    }
+    DRIVERS.forEach((_,i)=>{
+      if(progress[i]>=100)return;
+      const inc=(velocity[i]*delta)/(LAP_MS*TOTAL_LAPS/100);
+      progress[i]=Math.min(100,progress[i]+inc);
+      const pct=(progress[i]/100)*85;
+      const carEl=document.getElementById(`car-${i}`);
+      carEl.style.left=pct+'%';
+      const boosting=velocity[i]>1.4;
+      const lane=document.getElementById(`lane-${i}`);
+      if(boosting){
+        carEl.classList.add('boosting');lane.classList.add('boosting');
+        if(Math.random()>0.88){lane.dataset.idx=i;spawnSparks(lane,lane.clientWidth*(pct/100));}
+      } else {carEl.classList.remove('boosting');lane.classList.remove('boosting');}
+      if(progress[i]>=100&&!finished.includes(i))finished.push(i);
+    });
+    updatePositions();
+    const allDone=finished.length===DRIVERS.length;
+    const timeoutDone=currentLap>=TOTAL_LAPS&&lapTimer>LAP_MS*2;
+    if(allDone||timeoutDone){
+      DRIVERS.forEach((_,i)=>{if(!finished.includes(i))finished.push(i);});
+      raceRunning=false;setTimeout(showResults,700);return;
+    }
+    animFrame=requestAnimationFrame(gameLoop);
+  }
+
+  function doLightsOut(){
+    const ov=document.getElementById('lightsOverlay');
+    ov.classList.add('show');
+    document.getElementById('lightsText').textContent='GET READY';
+    document.getElementById('goText').style.display='none';
+    let lit=0;
+    const li=setInterval(()=>{
+      document.getElementById(`l${lit}`).classList.add('on');lit++;
+      if(lit===5){
+        clearInterval(li);
+        setTimeout(()=>{
+          for(let j=0;j<5;j++)document.getElementById(`l${j}`).classList.remove('on');
+          document.getElementById('lightsText').style.display='none';
+          const go=document.getElementById('goText');go.style.display='block';
+          setTimeout(()=>{
+            ov.classList.remove('show');
+            document.getElementById('lightsText').style.display='block';go.style.display='none';
+            raceRunning=true;lastTime=performance.now();lapTimer=0;
+            animFrame=requestAnimationFrame(gameLoop);
+          },600);
+        },900);
+      }
+    },500);
+  }
+
+  function startRace(){
+    document.getElementById('startBtn').disabled=true;
+    document.getElementById('statusBar').textContent='🔴 LIGHTS OUT...';
+    document.getElementById('statusBar').classList.remove('warning');
+    currentLap=0;buildTrack();setTimeout(doLightsOut,300);
+  }
+
+  function showResults(){
+    document.getElementById('statusBar').textContent='🏁 RACE FINISHED!';
+    document.getElementById('statusBar').classList.remove('warning');
+    const rem=DRIVERS.map((_,i)=>i).filter(i=>!finished.includes(i)).sort((a,b)=>progress[b]-progress[a]);
+    finalOrder=[...finished,...rem];
+    const medals=['🥇','🥈','🥉'],pc=['first','second','third'];
+    let pH='';
+    for(let r=0;r<Math.min(3,finalOrder.length);r++){
+      const d=DRIVERS[finalOrder[r]],team=TEAMS[d.team],pts=getPoints(r,DRIVERS.length);
+      pH+=`<div class="podium-row ${pc[r]}" style="animation-delay:${r*0.15}s">
+        <span class="podium-pos">${medals[r]}</span>
+        <div class="podium-team-dot" style="background:${team.color}"></div>
+        <div class="podium-info">
+          <div class="podium-name-txt">${d.ig}</div>
+          <div class="podium-sub">${d.num} · ${team.name}</div>
+        </div>
+        <span class="podium-pts">+${pts}PTS</span>
+      </div>`;
+    }
+    document.getElementById('podiumDisplay').innerHTML=pH;
+    let fH='';
+    finalOrder.forEach((dI,rank)=>{
+      const d=DRIVERS[dI],team=TEAMS[d.team],pts=getPoints(rank,DRIVERS.length);
+      fH+=`<div><strong>P${rank+1}</strong> <span class="team-dot" style="background:${team.color}"></span>${d.num} ${d.ig} <span class="pts">+${pts}pts</span></div>`;
+    });
+    document.getElementById('fullResults').innerHTML=fH;
+    setTimeout(()=>{document.getElementById('resultsOverlay').classList.add('show');spawnConfetti();},400);
+  }
+
+  function publishResults(){
+    const rN=getRaceNumber();
+    const results=JSON.parse(localStorage.getItem('gc_results')||'[]');
+    const standings=JSON.parse(localStorage.getItem('gc_standings')||'{}');
+    results.push({
+      race:rN,date:new Date().toLocaleDateString(),
+      order:finalOrder.map((dI,rank)=>({
+        position:rank+1,num:DRIVERS[dI].num,name:DRIVERS[dI].name,
+        ig:DRIVERS[dI].ig,team:DRIVERS[dI].team,points:getPoints(rank,DRIVERS.length)
+      }))
+    });
+    finalOrder.forEach((dI,rank)=>{
+      const k=DRIVERS[dI].ig;standings[k]=(standings[k]||0)+getPoints(rank,DRIVERS.length);
+    });
+    localStorage.setItem('gc_results',JSON.stringify(results));
+    localStorage.setItem('gc_standings',JSON.stringify(standings));
+    localStorage.setItem('gc_drivers',JSON.stringify(DRIVERS));
+    document.getElementById('publishBtn').style.display='none';
+    document.getElementById('publishedMsg').style.display='block';
+  }
+
+  function resetRace(){
+    cancelAnimationFrame(animFrame);raceRunning=false;
+    document.getElementById('resultsOverlay').classList.remove('show');
+    document.getElementById('startBtn').disabled=false;
+    document.getElementById('statusBar').textContent='▶ PRESS START TO BEGIN RACE';
+    document.getElementById('statusBar').classList.remove('warning');
+    document.getElementById('publishBtn').style.display='block';
+    document.getElementById('publishedMsg').style.display='none';
+    document.querySelectorAll('.confetti-piece').forEach(e=>e.remove());
+    buildTrack();
+  }
+
+  function spawnConfetti(){
+    const colors=['#ff2b2b','#ffe600','#00ff6a','#fff','#ff8800','#00aaff','#ff00ff'];
+    for(let i=0;i<90;i++){
+      setTimeout(()=>{
+        const c=document.createElement('div');c.className='confetti-piece';
+        c.style.left=Math.random()*100+'vw';
+        c.style.background=colors[Math.floor(Math.random()*colors.length)];
+        c.style.width=(5+Math.random()*9)+'px';c.style.height=(5+Math.random()*9)+'px';
+        c.style.borderRadius=Math.random()>0.5?'50%':'0';
+        c.style.animationDuration=(1.8+Math.random()*2.5)+'s';
+        c.style.animationDelay=Math.random()*0.8+'s';
+        document.body.appendChild(c);setTimeout(()=>c.remove(),5000);
+      },i*20);
+    }
+  }
+
+  buildTrack();
+
+  const RACE_PASS = 'xenvo2007';
+  function doRaceLogin() {
+    const pw = document.getElementById('racePwInput').value;
+    if (pw === RACE_PASS) {
+      sessionStorage.setItem('gc_race_auth', '1');
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('raceContent').style.display = 'block';
+    } else {
+      const err = document.getElementById('raceLoginErr');
+      err.style.display = 'block';
+      err.style.animation = 'none';
+      void err.offsetWidth;
+      err.style.animation = 'shake 0.3s ease';
+    }
+  }
+
+  // Auto-login if session active
+  if (sessionStorage.getItem('gc_race_auth') === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('raceContent').style.display = 'block';
+  }
+</script>
+</div><!-- end race-content -->
+</body>
+</html>
