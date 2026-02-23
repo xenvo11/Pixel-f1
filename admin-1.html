@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GRID CHAOS — ADMIN</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --red:#ff2b2b; --yellow:#ffe600; --green:#00ff6a; --white:#f5f5f5; --black:#0a0a0a; --grey:#1a1a1a; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--black); color:var(--white); font-family:'VT323',monospace; font-size:20px; min-height:100vh; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px); pointer-events:none; z-index:999; }
+
+    /* LOGIN */
+    .login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:24px; padding:40px; }
+    .login-title { font-family:'Press Start 2P',monospace; font-size:clamp(14px,3vw,24px); color:var(--red); text-shadow:4px 4px 0 var(--yellow); text-align:center; }
+    .login-sub { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--yellow); }
+    .login-box { background:var(--grey); padding:40px; max-width:420px; width:100%; box-shadow:0 -4px 0 var(--red),4px 0 0 var(--red),0 4px 0 var(--red),-4px 0 0 var(--red); display:flex; flex-direction:column; gap:16px; }
+    .login-label { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--yellow); }
+    .login-input { background:#000; border:3px solid #333; color:var(--white); font-family:'VT323',monospace; font-size:24px; padding:12px 14px; width:100%; outline:none; }
+    .login-input:focus { border-color:var(--red); }
+    .login-btn { font-family:'Press Start 2P',monospace; font-size:11px; padding:16px; background:var(--red); color:var(--white); border:none; cursor:pointer; box-shadow:5px 5px 0 var(--yellow); transition:transform 0.05s,box-shadow 0.05s; }
+    .login-btn:hover { transform:translate(2px,2px); box-shadow:3px 3px 0 var(--yellow); }
+    .login-err { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--red); display:none; animation:shake 0.3s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+    /* ADMIN PANEL */
+    .admin-panel { display:none; }
+    header { text-align:center; padding:24px 20px 16px; border-bottom:4px solid var(--red); }
+    header h1 { font-family:'Press Start 2P',monospace; font-size:clamp(13px,2.5vw,22px); color:var(--red); text-shadow:3px 3px 0 var(--yellow); }
+    .admin-badge { display:inline-block; font-family:'Press Start 2P',monospace; font-size:8px; background:var(--red); color:var(--white); padding:4px 10px; margin-top:8px; }
+
+    .stats-bar { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; padding:20px; background:#0d0d0d; border-bottom:3px solid #222; }
+    .stat { display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .stat-val { font-family:'Press Start 2P',monospace; font-size:20px; color:var(--yellow); }
+    .stat-label { font-family:'Press Start 2P',monospace; font-size:7px; color:#555; }
+
+    .admin-content { max-width:1100px; margin:0 auto; padding:30px 20px; }
+    .section-title { font-family:'Press Start 2P',monospace; font-size:clamp(11px,2vw,16px); color:var(--yellow); margin-bottom:20px; border-left:4px solid var(--red); padding-left:12px; }
+
+    /* Signups Table */
+    .signups-table { width:100%; border-collapse:collapse; margin-bottom:40px; }
+    .signups-table th { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--yellow); padding:12px 14px; background:#000; text-align:left; border-bottom:3px solid var(--red); }
+    .signups-table td { padding:12px 14px; border-bottom:2px solid #222; font-size:18px; vertical-align:middle; }
+    .signups-table tr:hover td { background:#111; }
+    .ig-cell { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--white); }
+    .name-cell { color:#aaa; }
+    .date-cell { color:#555; font-size:16px; }
+    .team-select { background:#000; border:2px solid #333; color:var(--white); font-family:'VT323',monospace; font-size:19px; padding:6px 10px; cursor:pointer; outline:none; width:100%; }
+    .team-select:focus { border-color:var(--yellow); }
+    .assign-btn { font-family:'Press Start 2P',monospace; font-size:7px; padding:8px 12px; background:var(--green); color:var(--black); border:none; cursor:pointer; box-shadow:3px 3px 0 #007733; transition:transform 0.05s; }
+    .assign-btn:hover { transform:translate(1px,1px); }
+    .assigned-badge { font-family:'Press Start 2P',monospace; font-size:8px; padding:6px 10px; display:inline-flex; align-items:center; gap:6px; }
+    .remove-btn { font-family:'Press Start 2P',monospace; font-size:7px; padding:6px 10px; background:var(--red); color:var(--white); border:none; cursor:pointer; box-shadow:2px 2px 0 #880000; }
+    .no-signups { font-family:'Press Start 2P',monospace; font-size:10px; color:#444; text-align:center; padding:40px; }
+
+    /* Grid overview */
+    .grid-overview { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:40px; }
+    .grid-card { background:var(--grey); padding:16px; border-left:4px solid; }
+    .grid-card-team { font-family:'Press Start 2P',monospace; font-size:8px; margin-bottom:6px; }
+    .grid-card-driver { font-size:18px; }
+    .grid-card-driver.empty { color:#333; }
+
+    /* Nav */
+    .admin-nav { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; padding:10px 20px 30px; }
+    .nav-link { font-family:'Press Start 2P',monospace; font-size:9px; padding:10px 16px; background:var(--grey); color:var(--yellow); text-decoration:none; border:3px solid var(--yellow); transition:background 0.1s; }
+    .nav-link:hover { background:var(--yellow); color:var(--black); }
+    .logout-btn { font-family:'Press Start 2P',monospace; font-size:9px; padding:10px 16px; background:var(--red); color:var(--white); border:3px solid var(--red); cursor:pointer; }
+
+    .toast { position:fixed; bottom:30px; right:30px; background:var(--green); color:var(--black); font-family:'Press Start 2P',monospace; font-size:9px; padding:14px 20px; z-index:1000; display:none; box-shadow:4px 4px 0 #007733; animation:slideIn 0.3s ease; }
+    @keyframes slideIn { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <p class="login-title">⚙ ADMIN PANEL</p>
+  <p class="login-sub">GRID CHAOS — RACE DIRECTOR</p>
+  <div class="login-box">
+    <p class="login-label">🔐 ENTER PASSWORD</p>
+    <input class="login-input" type="password" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <p class="login-err" id="loginErr">❌ WRONG PASSWORD!</p>
+    <button class="login-btn" onclick="doLogin()">▶ ACCESS PANEL</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-panel" id="adminPanel">
+  <header>
+    <h1>⚙ RACE DIRECTOR PANEL</h1>
+    <span class="admin-badge">GRID CHAOS — ADMIN</span>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-val" id="statSignups">0</span><span class="stat-label">SIGN-UPS</span></div>
+    <div class="stat"><span class="stat-val" id="statAssigned">0</span><span class="stat-label">ASSIGNED</span></div>
+    <div class="stat"><span class="stat-val" id="statVacant">10</span><span class="stat-label">VACANT</span></div>
+    <div class="stat"><span class="stat-val" id="statRaces">0</span><span class="stat-label">RACES RUN</span></div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- GRID OVERVIEW -->
+    <h2 class="section-title">// CURRENT GRID</h2>
+    <div class="grid-overview" id="gridOverview"></div>
+
+    <!-- SIGN-UPS -->
+    <h2 class="section-title">// SIGN-UPS — ASSIGN TEAMS</h2>
+    <div id="signupsContainer"></div>
+
+    <!-- DANGER ZONE -->
+    <h2 class="section-title" style="color:var(--red)">// DANGER ZONE</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px;">
+      <button class="assign-btn" style="background:var(--red);color:var(--white);box-shadow:3px 3px 0 #880000;font-size:8px;padding:10px 16px;" onclick="clearResults()">🗑 CLEAR ALL RESULTS</button>
+      <button class="assign-btn" style="background:var(--red);color:var(--white);box-shadow:3px 3px 0 #880000;font-size:8px;padding:10px 16px;" onclick="clearSignups()">🗑 CLEAR ALL SIGN-UPS</button>
+      <button class="assign-btn" style="background:var(--red);color:var(--white);box-shadow:3px 3px 0 #880000;font-size:8px;padding:10px 16px;" onclick="clearEverything()">⚠ RESET EVERYTHING</button>
+    </div>
+
+  </div>
+
+  <div class="admin-nav">
+    <a href="race.html" class="nav-link">🏁 RACE</a>
+    <a href="results.html" class="nav-link">📋 RESULTS</a>
+    <a href="standings.html" class="nav-link">🏆 STANDINGS</a>
+    <a href="index.html" class="nav-link">🏠 HOME</a>
+    <button class="logout-btn" onclick="logout()">🔒 LOGOUT</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const PASS = 'xenvo2007';
+
+  const TEAMS = {
+    redbull:  {name:'RED BULL',  color:'#3671C6', badge:'🐂'},
+    ferrari:  {name:'FERRARI',   color:'#E8002D', badge:'🐴'},
+    mercedes: {name:'MERCEDES',  color:'#27F4D2', badge:'⭐'},
+    mclaren:  {name:'McLAREN',   color:'#FF8000', badge:'🦁'},
+    aston:    {name:'ASTON',     color:'#229971', badge:'🏹'},
+    alpine:   {name:'ALPINE',    color:'#0093CC', badge:'❄️'},
+    haas:     {name:'HAAS',      color:'#B6BABD', badge:'🦅'},
+    rb:       {name:'RB',        color:'#6692FF', badge:'🔵'},
+    williams: {name:'WILLIAMS',  color:'#64C4FF', badge:'🦋'},
+    sauber:   {name:'SAUBER',    color:'#52E252', badge:'🍀'},
+  };
+
+  // Assignments: {ig, name, team, num} — stored separately from race drivers
+  function getAssignments() { return JSON.parse(localStorage.getItem('gc_assignments') || '[]'); }
+  function saveAssignments(a) {
+    localStorage.setItem('gc_assignments', JSON.stringify(a));
+    // Also sync to gc_drivers so race.html picks it up
+    const base = [
+      {num:'#??',name:'VACANT',ig:'@vacant1',team:'redbull'},
+      {num:'#??',name:'VACANT',ig:'@vacant2',team:'ferrari'},
+      {num:'#??',name:'VACANT',ig:'@vacant3',team:'mercedes'},
+      {num:'#??',name:'VACANT',ig:'@vacant4',team:'mclaren'},
+      {num:'#??',name:'VACANT',ig:'@vacant5',team:'aston'},
+      {num:'#??',name:'VACANT',ig:'@vacant6',team:'alpine'},
+      {num:'#??',name:'VACANT',ig:'@vacant7',team:'haas'},
+      {num:'#??',name:'VACANT',ig:'@vacant8',team:'rb'},
+      {num:'#??',name:'VACANT',ig:'@vacant9',team:'williams'},
+      {num:'#??',name:'VACANT',ig:'@vacant10',team:'sauber'},
+    ];
+    a.forEach(assign => {
+      const idx = base.findIndex(d => d.team === assign.team);
+      if (idx >= 0) {
+        base[idx].ig = '@' + assign.ig;
+        base[idx].name = assign.name;
+        base[idx].num = assign.num;
+      }
+    });
+    localStorage.setItem('gc_drivers', JSON.stringify(base));
+  }
+  function getSignups() { return JSON.parse(localStorage.getItem('gc_signups') || '[]'); }
+  function saveSignups(s) { localStorage.setItem('gc_signups', JSON.stringify(s)); }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2500);
+  }
+
+  function doLogin() {
+    const pw = document.getElementById('pwInput').value;
+    if (pw === PASS) {
+      sessionStorage.setItem('gc_admin', '1');
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      renderPanel();
+    } else {
+      const err = document.getElementById('loginErr');
+      err.style.display = 'block';
+      err.style.animation = 'none';
+      void err.offsetWidth;
+      err.style.animation = 'shake 0.3s ease';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('gc_admin');
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('pwInput').value = '';
+  }
+
+  function renderPanel() {
+    const signups = getSignups();
+    const assignments = getAssignments();
+    const results = JSON.parse(localStorage.getItem('gc_results') || '[]');
+
+    document.getElementById('statSignups').textContent = signups.length;
+    document.getElementById('statAssigned').textContent = assignments.length;
+    document.getElementById('statVacant').textContent = 10 - assignments.length;
+    document.getElementById('statRaces').textContent = results.length;
+
+    renderGridOverview(assignments);
+    renderSignups(signups, assignments);
+  }
+
+  function renderGridOverview(assignments) {
+    const el = document.getElementById('gridOverview');
+    el.innerHTML = '';
+    Object.entries(TEAMS).forEach(([key, team]) => {
+      const a = assignments.find(a => a.team === key);
+      const card = document.createElement('div');
+      card.className = 'grid-card';
+      card.style.borderLeftColor = team.color;
+      card.innerHTML = `
+        <div class="grid-card-team" style="color:${team.color}">${team.badge} ${team.name}</div>
+        <div class="grid-card-driver ${a ? '' : 'empty'}">
+          ${a ? `@${a.ig} <span style="color:#555">${a.num}</span>` : '— VACANT —'}
+        </div>`;
+      el.appendChild(card);
+    });
+  }
+
+  function renderSignups(signups, assignments) {
+    const container = document.getElementById('signupsContainer');
+    const addBtn = `<button class="assign-btn" style="background:var(--yellow);color:var(--black);font-size:9px;padding:12px 20px;margin-bottom:20px;box-shadow:4px 4px 0 #888;" onclick="showAddPlayer()">➕ ADD PLAYER MANUALLY</button>`;
+
+    if (signups.length === 0) {
+      container.innerHTML = addBtn + `<p class="no-signups">NO SIGN-UPS YET.<br><br>ADD PLAYERS MANUALLY BELOW!</p>`;
+      return;
+    }
+
+    let html = addBtn + `<table class="signups-table">
+      <thead><tr>
+        <th>#</th><th>NAME</th><th>INSTAGRAM</th><th>DATE</th><th>TEAM</th><th>NUM</th><th>ACTION</th>
+      </tr></thead><tbody>`;
+
+    signups.forEach((s, idx) => {
+      const assigned = assignments.find(a => a.ig === s.ig);
+      const teamObj = assigned ? TEAMS[assigned.team] : null;
+      const takenTeams = assignments.filter(a => a.ig !== s.ig).map(a => a.team);
+
+      const teamOptions = '<option value="">— SELECT TEAM —</option>' + Object.entries(TEAMS).map(([key, t]) => {
+        const taken = takenTeams.includes(key);
+        return `<option value="${key}" ${taken?'disabled':''} ${assigned&&assigned.team===key?'selected':''}>${taken?'✗':''} ${t.badge} ${t.name}</option>`;
+      }).join('');
+
+      html += `<tr>
+        <td class="date-cell">${idx+1}</td>
+        <td class="name-cell">${s.name}</td>
+        <td class="ig-cell">@${s.ig}</td>
+        <td class="date-cell">${s.date}</td>
+        <td>
+          ${assigned
+            ? `<span class="assigned-badge" style="background:${teamObj.color}22;color:${teamObj.color};border:2px solid ${teamObj.color}">${teamObj.badge} ${teamObj.name}</span>`
+            : `<select class="team-select" id="team-${idx}">${teamOptions}</select>`
+          }
+        </td>
+        <td>
+          ${assigned
+            ? `<span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--yellow)">${assigned.num}</span>`
+            : `<input type="text" id="num-${idx}" placeholder="#00" style="background:#000;border:2px solid #333;color:var(--white);font-family:'VT323',monospace;font-size:20px;padding:6px;width:70px;outline:none"/>`
+          }
+        </td>
+        <td>
+          ${assigned
+            ? `<button class="remove-btn" onclick="removeAssignment('${s.ig}')">✕</button>`
+            : `<button class="assign-btn" onclick="assignTeam('${s.ig}', ${idx})">✓ ASSIGN</button>`
+          }
+        </td>
+      </tr>`;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function showAddPlayer() {
+    const name = prompt('Enter player name:');
+    if (!name) return;
+    const ig = prompt('Enter Instagram username (without @):');
+    if (!ig) return;
+    const signups = getSignups();
+    if (signups.find(s => s.ig === ig)) { alert('This Instagram is already in the list!'); return; }
+    signups.push({ name: name.trim(), ig: ig.trim().replace('@',''), date: new Date().toLocaleDateString(), team: null });
+    saveSignups(signups);
+    showToast('✅ Player added: @' + ig);
+    renderPanel();
+  }
+
+  function assignTeam(ig, idx) {
+    const teamKey = document.getElementById(`team-${idx}`).value;
+    const numRaw = document.getElementById(`num-${idx}`).value.trim();
+    const numVal = numRaw ? (numRaw.startsWith('#') ? numRaw : '#'+numRaw) : '#' + Math.floor(Math.random()*89+10);
+    if (!teamKey) { alert('Please select a team!'); return; }
+
+    const assignments = getAssignments();
+    const signups = getSignups();
+
+    if (assignments.find(a => a.team === teamKey)) { alert('That team is already assigned to someone!'); return; }
+
+    const signup = signups.find(s => s.ig === ig);
+    assignments.push({ ig, name: signup ? signup.name : ig, team: teamKey, num: numVal });
+
+    const sIdx = signups.findIndex(s => s.ig === ig);
+    if (sIdx >= 0) signups[sIdx].team = teamKey;
+
+    saveAssignments(assignments);
+    saveSignups(signups);
+    showToast(`✅ @${ig} → ${TEAMS[teamKey].badge} ${TEAMS[teamKey].name}`);
+    renderPanel();
+  }
+
+  function removeAssignment(ig) {
+    if (!confirm('Remove team assignment for @' + ig + '?')) return;
+    const assignments = getAssignments().filter(a => a.ig !== ig);
+    const signups = getSignups();
+    const sIdx = signups.findIndex(s => s.ig === ig);
+    if (sIdx >= 0) signups[sIdx].team = null;
+    saveAssignments(assignments);
+    saveSignups(signups);
+    showToast('✅ Assignment removed for @' + ig);
+    renderPanel();
+  }
+
+  function clearResults() {
+    if (!confirm('Delete ALL race results and standings? This cannot be undone!')) return;
+    localStorage.removeItem('gc_results');
+    localStorage.removeItem('gc_standings');
+    showToast('🗑 Results cleared!');
+    renderPanel();
+  }
+
+  function clearSignups() {
+    if (!confirm('Delete ALL sign-ups and assignments? This cannot be undone!')) return;
+    localStorage.removeItem('gc_signups');
+    localStorage.removeItem('gc_assignments');
+    localStorage.removeItem('gc_drivers');
+    showToast('🗑 Sign-ups cleared!');
+    renderPanel();
+  }
+
+  function clearEverything() {
+    if (!confirm('RESET EVERYTHING — all results, signups, driver assignments? Cannot be undone!')) return;
+    localStorage.removeItem('gc_results');
+    localStorage.removeItem('gc_standings');
+    localStorage.removeItem('gc_signups');
+    localStorage.removeItem('gc_assignments');
+    localStorage.removeItem('gc_drivers');
+    showToast('⚠ Everything reset!');
+    renderPanel();
+  }
+
+  // Auto-login if session active
+  if (sessionStorage.getItem('gc_admin') === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    renderPanel();
+  }
+
+  document.getElementById('pwInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>
