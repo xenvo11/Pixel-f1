@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GRID CHAOS — Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --red:#ff2b2b; --yellow:#ffe600; --green:#00ff6a; --white:#f5f5f5; --black:#0a0a0a; --grey:#1a1a1a; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--black); color:var(--white); font-family:'VT323',monospace; font-size:20px; min-height:100vh; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px); pointer-events:none; z-index:999; }
+    nav { display:flex; justify-content:space-between; align-items:center; padding:18px 32px; border-bottom:4px solid var(--red); background:var(--black); flex-wrap:wrap; gap:12px; }
+    .nav-logo { font-family:'Press Start 2P',monospace; font-size:13px; color:var(--red); text-shadow:3px 3px 0 var(--yellow); text-decoration:none; }
+    nav ul { list-style:none; display:flex; gap:24px; }
+    nav ul li a { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--white); text-decoration:none; }
+    nav ul li a:hover { color:var(--yellow); }
+
+    .page { max-width:680px; margin:0 auto; padding:50px 24px; }
+    .page-title { font-family:'Press Start 2P',monospace; font-size:clamp(14px,3vw,24px); color:var(--yellow); text-align:center; margin-bottom:8px; text-shadow:3px 3px 0 var(--red); }
+    .page-sub { font-size:20px; color:#888; text-align:center; margin-bottom:40px; }
+
+    /* Steps */
+    .steps-row { display:flex; justify-content:center; gap:0; margin-bottom:40px; flex-wrap:wrap; }
+    .step { display:flex; flex-direction:column; align-items:center; gap:8px; flex:1; min-width:120px; position:relative; }
+    .step:not(:last-child)::after { content:'▶'; position:absolute; right:-8px; top:16px; font-family:'Press Start 2P',monospace; font-size:10px; color:var(--red); }
+    .step-num { font-family:'Press Start 2P',monospace; font-size:18px; background:var(--yellow); color:var(--black); width:40px; height:40px; display:flex; align-items:center; justify-content:center; }
+    .step-txt { font-family:'Press Start 2P',monospace; font-size:7px; color:var(--white); text-align:center; line-height:1.8; }
+
+    /* IG Banner */
+    .ig-banner { background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045); padding:20px 28px; margin-bottom:32px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; box-shadow:6px 6px 0 var(--yellow); }
+    .ig-banner-text { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--white); line-height:1.8; }
+    .ig-banner-text span { display:block; font-size:13px; color:var(--yellow); margin-top:4px; }
+    .ig-btn { font-family:'Press Start 2P',monospace; font-size:9px; padding:12px 18px; background:var(--white); color:#833ab4; border:none; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; box-shadow:4px 4px 0 rgba(0,0,0,0.4); white-space:nowrap; transition:transform 0.05s; }
+    .ig-btn:hover { transform:translate(2px,2px); }
+
+    /* Form */
+    .signup-box { background:var(--grey); padding:36px; box-shadow:0 -4px 0 var(--red),4px 0 0 var(--red),0 4px 0 var(--red),-4px 0 0 var(--red); }
+    .form-row { display:flex; flex-direction:column; gap:8px; margin-bottom:22px; }
+    .form-label { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--yellow); }
+    .form-input { background:#000; border:3px solid #333; color:var(--white); font-family:'VT323',monospace; font-size:22px; padding:12px 14px; width:100%; outline:none; transition:border-color 0.1s; }
+    .form-input:focus { border-color:var(--red); }
+    .form-input::placeholder { color:#333; }
+    .ig-prefix { display:flex; align-items:center; }
+    .ig-at { background:var(--red); color:var(--white); font-family:'Press Start 2P',monospace; font-size:13px; padding:13px 10px; border:3px solid var(--red); border-right:none; }
+    .ig-prefix .form-input { border-left:none; }
+    .checkbox-row { display:flex; align-items:flex-start; gap:12px; margin-bottom:28px; }
+    .checkbox-row input[type="checkbox"] { width:20px; height:20px; accent-color:var(--red); margin-top:4px; flex-shrink:0; cursor:pointer; }
+    .checkbox-label { font-size:18px; color:#aaa; line-height:1.5; }
+    .checkbox-label a { color:var(--yellow); text-decoration:none; }
+    .submit-btn { font-family:'Press Start 2P',monospace; font-size:11px; padding:16px 32px; background:var(--red); color:var(--white); border:none; cursor:pointer; width:100%; box-shadow:6px 6px 0 var(--yellow); transition:transform 0.05s,box-shadow 0.05s; }
+    .submit-btn:hover { transform:translate(3px,3px); box-shadow:3px 3px 0 var(--yellow); }
+
+    /* Success */
+    .signup-success { display:none; flex-direction:column; align-items:center; gap:18px; padding:36px; background:var(--grey); text-align:center; box-shadow:0 -4px 0 var(--green),4px 0 0 var(--green),0 4px 0 var(--green),-4px 0 0 var(--green); }
+    .success-icon { font-size:56px; }
+    .success-title { font-family:'Press Start 2P',monospace; font-size:13px; color:var(--green); line-height:1.8; }
+    .success-info { font-family:'Press Start 2P',monospace; font-size:8px; color:var(--yellow); background:#000; padding:14px 20px; box-shadow:4px 4px 0 var(--yellow); line-height:2.2; }
+    .success-desc { font-size:19px; color:#aaa; max-width:380px; line-height:1.6; }
+
+    .spots-left { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--red); text-align:center; margin-bottom:20px; animation:blink 1s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .already-signed { display:none; flex-direction:column; align-items:center; gap:16px; padding:36px; background:var(--grey); text-align:center; box-shadow:0 -4px 0 var(--yellow),4px 0 0 var(--yellow),0 4px 0 var(--yellow),-4px 0 0 var(--yellow); }
+    .already-title { font-family:'Press Start 2P',monospace; font-size:12px; color:var(--yellow); line-height:1.8; }
+
+    .nav-bottom { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; padding:30px 20px; }
+    .nav-link { font-family:'Press Start 2P',monospace; font-size:9px; padding:10px 16px; background:var(--grey); color:var(--yellow); text-decoration:none; border:3px solid var(--yellow); transition:background 0.1s; }
+    .nav-link:hover { background:var(--yellow); color:var(--black); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">🏁 GRID CHAOS</a>
+  <ul>
+    <li><a href="index.html">HOME</a></li>
+    <li><a href="results.html">RESULTS</a></li>
+    <li><a href="standings.html">STANDINGS</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+  <h1 class="page-title">🏎️ JOIN THE GRID</h1>
+  <p class="page-sub">SEASON 1 — SIGN UP BELOW</p>
+
+  <div class="steps-row">
+    <div class="step"><div class="step-num">1</div><p class="step-txt">FOLLOW<br>@_.MATTX7</p></div>
+    <div class="step"><div class="step-num">2</div><p class="step-txt">SIGN UP<br>HERE</p></div>
+    <div class="step"><div class="step-num">3</div><p class="step-txt">GET YOUR<br>TEAM</p></div>
+    <div class="step"><div class="step-num">4</div><p class="step-txt">WATCH<br>& WIN</p></div>
+  </div>
+
+  <p class="spots-left" id="spotsLeft">⚠ LIMITED SPOTS AVAILABLE ⚠</p>
+
+  <div class="ig-banner">
+    <div class="ig-banner-text">STEP 1 — FOLLOW FIRST!<span>📸 @_.mattx7</span></div>
+    <a href="https://www.instagram.com/_.mattx7" target="_blank" class="ig-btn">📸 FOLLOW ON IG</a>
+  </div>
+
+  <!-- Form -->
+  <div class="signup-box" id="signupForm">
+    <div class="form-row">
+      <label class="form-label">YOUR NAME</label>
+      <input class="form-input" type="text" id="nameInput" placeholder="Your name" autocomplete="off"/>
+    </div>
+    <div class="form-row">
+      <label class="form-label">YOUR INSTAGRAM USERNAME</label>
+      <div class="ig-prefix">
+        <span class="ig-at">@</span>
+        <input class="form-input" type="text" id="igInput" placeholder="username" autocomplete="off"/>
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="followCheck"/>
+      <label class="checkbox-label" for="followCheck">
+        I confirm I follow <a href="https://www.instagram.com/_.mattx7" target="_blank">@_.mattx7</a> on Instagram. I understand this is required to keep my spot.
+      </label>
+    </div>
+    <button class="submit-btn" onclick="handleSignup()">▶ ENTER THE GRID</button>
+  </div>
+
+  <!-- Already signed up -->
+  <div class="already-signed" id="alreadySigned">
+    <span style="font-size:48px">✅</span>
+    <p class="already-title">YOU'RE ALREADY<br>ON THE GRID!</p>
+    <div class="success-info" id="alreadyInfo">@? — WAITING FOR TEAM ASSIGNMENT</div>
+    <p class="success-desc">The race director will assign your team soon. Follow <a href="https://instagram.com/_.mattx7" target="_blank" style="color:var(--yellow)">@_.mattx7</a> for updates!</p>
+  </div>
+
+  <!-- Success -->
+  <div class="signup-success" id="signupSuccess">
+    <span class="success-icon">🏁</span>
+    <p class="success-title">YOU'RE ON<br>THE GRID!</p>
+    <div class="success-info" id="successInfo">@? — PENDING TEAM ASSIGNMENT</div>
+    <p class="success-desc">The race director will assign your team soon. Follow <a href="https://instagram.com/_.mattx7" target="_blank" style="color:var(--yellow)">@_.mattx7</a> for race day announcements!</p>
+  </div>
+</div>
+
+<div class="nav-bottom">
+  <a href="index.html" class="nav-link">🏠 HOME</a>
+  <a href="results.html" class="nav-link">📋 RESULTS</a>
+  <a href="standings.html" class="nav-link">🏆 STANDINGS</a>
+</div>
+
+<script>
+  const MAX_SPOTS = 10;
+
+  function getSignups() { return JSON.parse(localStorage.getItem('gc_signups') || '[]'); }
+  function saveSignups(s) { localStorage.setItem('gc_signups', JSON.stringify(s)); }
+
+  function updateSpots() {
+    const taken = getSignups().length;
+    const left = MAX_SPOTS - taken;
+    const el = document.getElementById('spotsLeft');
+    if (left <= 0) el.textContent = '🚫 ALL SPOTS TAKEN — SEASON 1 GRID IS FULL';
+    else el.textContent = `⚠ ${left} SPOT${left===1?'':'S'} REMAINING — SIGN UP NOW ⚠`;
+  }
+
+  function checkAlreadySignedUp() {
+    const myIG = localStorage.getItem('gc_my_ig');
+    if (!myIG) return false;
+    const signups = getSignups();
+    const me = signups.find(s => s.ig === myIG);
+    if (me) {
+      document.getElementById('signupForm').style.display = 'none';
+      const already = document.getElementById('alreadySigned');
+      already.style.display = 'flex';
+      const drivers = JSON.parse(localStorage.getItem('gc_drivers') || '[]');
+      const assigned = drivers.find(d => d.ig === '@'+myIG);
+      document.getElementById('alreadyInfo').textContent = assigned
+        ? `@${myIG} — ${assigned.num} — TEAM ASSIGNED ✅`
+        : `@${myIG} — WAITING FOR TEAM ASSIGNMENT`;
+      return true;
+    }
+    return false;
+  }
+
+  function handleSignup() {
+    const name = document.getElementById('nameInput').value.trim();
+    const ig = document.getElementById('igInput').value.trim().replace('@','');
+    const followed = document.getElementById('followCheck').checked;
+    if (!name) { alert('Please enter your name!'); return; }
+    if (!ig) { alert('Please enter your Instagram username!'); return; }
+    if (!followed) { alert('Please confirm you follow @_.mattx7 to enter!'); return; }
+
+    const signups = getSignups();
+    if (signups.length >= MAX_SPOTS) { alert('Sorry — all spots are taken! Season 1 grid is full.'); return; }
+    if (signups.find(s => s.ig === ig)) { alert('This Instagram is already signed up!'); return; }
+
+    signups.push({ name, ig, date: new Date().toLocaleDateString(), team: null });
+    saveSignups(signups);
+    localStorage.setItem('gc_my_ig', ig);
+
+    document.getElementById('signupForm').style.display = 'none';
+    const success = document.getElementById('signupSuccess');
+    success.style.display = 'flex';
+    document.getElementById('successInfo').textContent = `@${ig} — PENDING TEAM ASSIGNMENT`;
+    updateSpots();
+  }
+
+  updateSpots();
+  checkAlreadySignedUp();
+</script>
+</body>
+</html>
