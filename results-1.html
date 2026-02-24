@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GRID CHAOS - Race Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--red:#ff2b2b;--yellow:#ffe600;--green:#00ff6a;--white:#f5f5f5;--black:#0a0a0a;--grey:#1a1a1a}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--black);color:var(--white);font-family:'VT323',monospace;font-size:20px;min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);pointer-events:none;z-index:999}
+    nav{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:4px solid var(--red);flex-wrap:wrap;gap:10px}
+    .nav-logo{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--red);text-shadow:2px 2px 0 var(--yellow);text-decoration:none}
+    .nav-links{display:flex;gap:8px;flex-wrap:wrap}
+    .nav-link{font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 11px;background:var(--grey);color:var(--yellow);text-decoration:none;border:2px solid var(--yellow)}
+    .nav-link:hover{background:var(--yellow);color:var(--black)}
+    header{text-align:center;padding:32px 20px 20px;border-bottom:3px solid #222;position:relative;overflow:hidden}
+    header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(255,43,43,0.03) 80px,rgba(255,43,43,0.03) 82px)}
+    header h1{font-family:'Press Start 2P',monospace;font-size:clamp(14px,3vw,26px);color:var(--red);text-shadow:4px 4px 0 var(--yellow);position:relative}
+    .subtitle{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--yellow);margin-top:10px;position:relative}
+    .content{max-width:860px;margin:0 auto;padding:28px 18px}
+    .section-title{font-family:'Press Start 2P',monospace;font-size:clamp(11px,2vw,17px);color:var(--yellow);text-align:center;margin-bottom:28px}
+    .section-title::after{content:'';display:block;width:60px;height:4px;background:var(--red);margin:12px auto 0}
+    .no-results{text-align:center;padding:60px 20px}
+    .no-results p{font-family:'Press Start 2P',monospace;font-size:11px;color:#333;line-height:2.5}
+    .race-block{background:var(--grey);margin-bottom:24px;border-top:4px solid var(--red)}
+    .race-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#000;border-bottom:3px solid #1a1a1a;flex-wrap:wrap;gap:10px}
+    .race-header-left{display:flex;flex-direction:column;gap:4px}
+    .race-title{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--yellow)}
+    .race-circuit{font-size:18px;color:#999;display:flex;align-items:center;gap:6px}
+    .race-date{font-family:'Press Start 2P',monospace;font-size:7px;color:#555}
+    .replay-btn{font-family:'Press Start 2P',monospace;font-size:8px;padding:10px 14px;background:var(--red);color:var(--white);border:none;cursor:pointer;box-shadow:3px 3px 0 var(--yellow);transition:transform .05s;display:flex;align-items:center;gap:6px}
+    .replay-btn:hover{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--yellow)}
+    .result-row{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid #1e1e1e;transition:background .1s}
+    .result-row:hover{background:#111}
+    .result-row:last-child{border-bottom:none}
+    .result-row.top1{background:rgba(255,230,0,0.05)}
+    .result-row.top2{background:rgba(170,170,170,0.03)}
+    .result-row.top3{background:rgba(205,127,50,0.03)}
+    .pos{font-family:'Press Start 2P',monospace;font-size:10px;width:34px;flex-shrink:0}
+    .top1 .pos{color:var(--yellow)}.top2 .pos{color:#aaa}.top3 .pos{color:#cd7f32}
+    .medal{font-size:20px;width:26px;flex-shrink:0}
+    .team-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+    .driver-info{flex:1}
+    .driver-ig{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--white)}
+    .driver-sub{font-size:16px;color:#555;margin-top:1px}
+    .pts-badge{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--yellow);background:#000;padding:4px 9px;border:1px solid #333}
+
+    /* REPLAY OVERLAY */
+    .replay-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:800;flex-direction:column;align-items:center;padding:14px;overflow-y:auto}
+    .replay-overlay.show{display:flex}
+    .replay-top{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:960px;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+    .replay-title-txt{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2vw,15px);color:var(--yellow);text-shadow:2px 2px 0 var(--red)}
+    .close-btn{font-family:'Press Start 2P',monospace;font-size:9px;padding:10px 14px;background:var(--grey);color:var(--red);border:2px solid var(--red);cursor:pointer}
+    .close-btn:hover{background:var(--red);color:var(--white)}
+    .replay-body{display:flex;gap:12px;width:100%;max-width:960px;flex-wrap:wrap}
+    .replay-left{flex:1;min-width:260px;display:flex;flex-direction:column;align-items:center;gap:8px}
+    #replayCanvas{border:3px solid #333;background:#0d1f0d;display:block;width:100%;max-width:520px}
+    .replay-info{font-family:'Press Start 2P',monospace;font-size:7px;color:#555;text-align:center}
+    .progress-bar-wrap{width:100%;max-width:520px;background:#222;height:5px}
+    .progress-bar-fill{height:100%;background:var(--red);width:0%;transition:width .1s}
+    .replay-lap{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--yellow);text-align:center}
+    .replay-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .ctrl-btn{font-family:'Press Start 2P',monospace;font-size:7px;padding:9px 13px;background:var(--grey);color:var(--yellow);border:2px solid var(--yellow);cursor:pointer}
+    .ctrl-btn:hover{background:var(--yellow);color:var(--black)}
+    .replay-right{width:175px;flex-shrink:0;background:var(--grey);padding:10px}
+    .rlb-title{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--yellow);margin-bottom:10px;text-align:center;border-bottom:2px solid var(--red);padding-bottom:6px}
+    .rlb-row{display:flex;align-items:center;gap:6px;padding:5px 2px;border-bottom:1px solid #222}
+    .rlb-pos{font-family:'Press Start 2P',monospace;font-size:6px;width:18px;flex-shrink:0;color:#555}
+    .rlb-row.p1 .rlb-pos{color:var(--yellow)}
+    .rlb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .rlb-name{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--white);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .rlb-pts{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--yellow)}
+    @media(max-width:560px){.replay-right{width:100%}.replay-body{flex-direction:column}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">&#127937; GRID CHAOS</a>
+  <div class="nav-links">
+    <a href="standings.html" class="nav-link">&#127942; STANDINGS</a>
+    <a href="index.html" class="nav-link">&#127968; HOME</a>
+  </div>
+</nav>
+
+<header>
+  <h1>&#128203; RACE RESULTS</h1>
+  <p class="subtitle">GRID CHAOS &#8212; SEASON 1</p>
+</header>
+
+<div class="content">
+  <h2 class="section-title">// ALL RACES</h2>
+  <div id="resultsContainer"></div>
+</div>
+
+<!-- REPLAY MODAL -->
+<div class="replay-overlay" id="replayOverlay">
+  <div class="replay-top">
+    <p class="replay-title-txt" id="replayTitleTxt">&#9654; REPLAY</p>
+    <button class="close-btn" onclick="closeReplay()">&#10005; CLOSE</button>
+  </div>
+  <div class="replay-body">
+    <div class="replay-left">
+      <canvas id="replayCanvas" width="500" height="360"></canvas>
+      <p class="replay-info" id="replayInfo">---</p>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+      <p class="replay-lap" id="replayLap">LAP 0 / 3</p>
+      <div class="replay-btns">
+        <button class="ctrl-btn" onclick="restartReplay()">&#128260; RESTART</button>
+        <button class="ctrl-btn" id="speedBtn" onclick="toggleSpeed()">&#9193; 2X SPEED</button>
+      </div>
+    </div>
+    <div class="replay-right">
+      <p class="rlb-title">// FINAL ORDER</p>
+      <div id="replayLB"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TEAMS={
+  redbull:{name:'RED BULL',color:'#3671C6'},ferrari:{name:'FERRARI',color:'#E8002D'},
+  mercedes:{name:'MERCEDES',color:'#27F4D2'},mclaren:{name:'McLAREN',color:'#FF8000'},
+  aston:{name:'ASTON',color:'#229971'},alpine:{name:'ALPINE',color:'#0093CC'},
+  haas:{name:'HAAS',color:'#C0C0C0'},rb:{name:'RB',color:'#6692FF'},
+  williams:{name:'WILLIAMS',color:'#64C4FF'},sauber:{name:'SAUBER',color:'#52E252'}
+};
+
+const CIRCUITS=[
+  {name:'MONACO',path:[[.52,.12],[.62,.10],[.72,.10],[.80,.12],[.86,.18],[.87,.26],[.83,.32],[.76,.34],[.70,.34],[.65,.38],[.64,.44],[.67,.50],[.72,.54],[.76,.60],[.76,.66],[.72,.72],[.66,.76],[.60,.80],[.54,.82],[.46,.82],[.38,.78],[.30,.72],[.24,.64],[.20,.56],[.18,.48],[.18,.40],[.20,.34],[.24,.28],[.30,.22],[.38,.16],[.46,.12],[.52,.12]]},
+  {name:'MONZA',path:[[.50,.08],[.70,.08],[.82,.10],[.90,.16],[.92,.26],[.88,.36],[.80,.40],[.72,.38],[.68,.34],[.68,.42],[.72,.48],[.82,.54],[.88,.62],[.86,.72],[.80,.82],[.70,.88],[.56,.90],[.44,.90],[.30,.88],[.20,.82],[.14,.72],[.12,.62],[.18,.54],[.28,.48],[.32,.42],[.32,.34],[.28,.38],[.20,.40],[.12,.36],[.08,.26],[.10,.16],[.18,.10],[.30,.08],[.50,.08]]},
+  {name:'SILVERSTONE',path:[[.50,.10],[.64,.10],[.74,.12],[.82,.18],[.86,.28],[.84,.38],[.78,.44],[.82,.50],[.86,.58],[.84,.68],[.76,.76],[.68,.82],[.56,.86],[.44,.86],[.32,.82],[.24,.76],[.16,.68],[.14,.58],[.18,.50],[.22,.44],[.16,.38],[.14,.28],[.18,.18],[.26,.12],[.36,.10],[.50,.10]]},
+  {name:'SPA',path:[[.50,.08],[.68,.08],[.80,.12],[.88,.20],[.86,.30],[.78,.34],[.70,.32],[.62,.34],[.58,.40],[.60,.48],[.68,.54],[.78,.58],[.84,.66],[.82,.76],[.74,.84],[.62,.88],[.50,.90],[.38,.88],[.26,.84],[.18,.76],[.16,.66],[.22,.58],[.32,.54],[.40,.50],[.42,.42],[.38,.34],[.30,.32],[.22,.34],[.14,.30],[.12,.20],[.20,.12],[.32,.08],[.50,.08]]},
+  {name:'SUZUKA',path:[[.50,.10],[.65,.10],[.76,.14],[.84,.22],[.84,.32],[.78,.38],[.70,.40],[.62,.42],[.56,.46],[.52,.50],[.56,.54],[.64,.56],[.72,.60],[.78,.66],[.80,.74],[.76,.82],[.66,.88],[.52,.90],[.38,.88],[.28,.82],[.24,.74],[.26,.66],[.32,.60],[.40,.56],[.48,.54],[.52,.50],[.48,.46],[.42,.42],[.34,.40],[.26,.38],[.20,.32],[.20,.22],[.28,.14],[.38,.10],[.50,.10]]},
+  {name:'INTERLAGOS',path:[[.50,.12],[.64,.12],[.74,.16],[.82,.24],[.84,.34],[.80,.42],[.72,.46],[.68,.52],[.70,.60],[.76,.66],[.80,.74],[.76,.82],[.66,.88],[.52,.90],[.38,.88],[.28,.82],[.24,.74],[.28,.66],[.34,.60],[.36,.52],[.32,.46],[.24,.42],[.20,.34],[.22,.24],[.30,.16],[.40,.12],[.50,.12]]},
+  {name:'ABU DHABI',path:[[.50,.10],[.68,.10],[.80,.14],[.88,.22],[.90,.34],[.86,.44],[.76,.48],[.78,.56],[.86,.62],[.88,.72],[.82,.82],[.70,.88],[.54,.90],[.46,.90],[.34,.88],[.22,.82],[.16,.72],[.18,.62],[.26,.56],[.28,.48],[.18,.44],[.14,.34],[.16,.22],[.24,.14],[.36,.10],[.50,.10]]},
+  {name:'BAHRAIN',path:[[.50,.10],[.66,.10],[.78,.16],[.86,.26],[.86,.38],[.80,.46],[.70,.48],[.72,.56],[.80,.64],[.82,.74],[.74,.84],[.60,.88],[.50,.90],[.40,.88],[.26,.84],[.18,.74],[.20,.64],[.28,.56],[.30,.48],[.20,.46],[.14,.38],[.14,.26],[.22,.16],[.34,.10],[.50,.10]]},
+  {name:'MELBOURNE',path:[[.50,.10],[.68,.10],[.80,.16],[.88,.28],[.86,.40],[.78,.46],[.74,.54],[.78,.62],[.86,.70],[.82,.80],[.68,.88],[.52,.90],[.38,.88],[.24,.80],[.20,.70],[.28,.62],[.32,.54],[.28,.46],[.20,.40],[.18,.28],[.26,.16],[.38,.10],[.50,.10]]},
+  {name:'SINGAPORE',path:[[.50,.10],[.72,.10],[.84,.16],[.90,.28],[.86,.40],[.76,.44],[.72,.52],[.78,.60],[.86,.68],[.84,.78],[.72,.86],[.56,.90],[.44,.90],[.28,.86],[.16,.78],[.14,.68],[.22,.60],[.28,.52],[.24,.44],[.14,.40],[.10,.28],[.16,.16],[.28,.10],[.50,.10]]}
+];
+
+const medals=['🥇','🥈','🥉'];
+const topCls=['top1','top2','top3'];
+
+function render(){
+  const results=JSON.parse(localStorage.getItem('gc_results')||'[]');
+  const con=document.getElementById('resultsContainer');
+  if(!results.length){
+    con.innerHTML='<div class="no-results"><p>NO RACES YET.<br><br>CHECK BACK<br>AFTER RACE DAY!</p></div>';
+    return;
+  }
+  const drivers=JSON.parse(localStorage.getItem('gc_drivers')||'[]');
+  con.innerHTML='';
+  [...results].reverse().forEach(race=>{
+    const circ=CIRCUITS.find(c=>c.name===race.circuit)||{name:race.circuit||'UNKNOWN'};
+    const flag=race.flag||'🏁';
+    const block=document.createElement('div');
+    block.className='race-block';
+    let rows='';
+    race.order.forEach((r,i)=>{
+      const drv=drivers.find(d=>d.ig===r.ig)||{};
+      const team=TEAMS[r.team||drv.team]||{color:'#888',name:'UNKNOWN'};
+      rows+=`<div class="result-row ${topCls[i]||''}">
+        <span class="pos">P${r.position}</span>
+        ${i<3?`<span class="medal">${medals[i]}</span>`:'<span style="width:26px;flex-shrink:0"></span>'}
+        <span class="team-dot" style="background:${team.color}"></span>
+        <div class="driver-info">
+          <div class="driver-ig">${r.ig}</div>
+          <div class="driver-sub">${r.num} &middot; ${team.name}</div>
+        </div>
+        <span class="pts-badge">+${r.points}PTS</span>
+      </div>`;
+    });
+    block.innerHTML=`
+      <div class="race-header">
+        <div class="race-header-left">
+          <div class="race-title">RACE ${race.race}</div>
+          <div class="race-circuit">${flag} ${race.circuit||'UNKNOWN'}</div>
+          <div class="race-date">${race.date||''}</div>
+        </div>
+        <button class="replay-btn" onclick="openReplay(${race.race})">&#9654; WATCH REPLAY</button>
+      </div>
+      ${rows}`;
+    con.appendChild(block);
+  });
+}
+
+// ── REPLAY ENGINE ──
+const rc=document.getElementById('replayCanvas');
+const rx=rc.getContext('2d');
+const RW=rc.width,RH=rc.height,RP=24;
+const LAPS=3;
+let rAnim=null,rRunning=false,rSpeed=1;
+let rProg=[],rVel=[],rTrails=[],rDrivers=[],rCirc=null,rPts=[],rSL=[],rSA=[],rTL=0,rLT=0;
+
+function buildRP(c){
+  rPts=c.path.map(([nx,ny])=>({x:RP+nx*(RW-RP*2),y:RP+ny*(RH-RP*2)}));
+  rSL=[];rSA=[];rTL=0;
+  for(let i=0;i<rPts.length-1;i++){
+    const dx=rPts[i+1].x-rPts[i].x,dy=rPts[i+1].y-rPts[i].y;
+    const l=Math.sqrt(dx*dx+dy*dy);rSL.push(l);rTL+=l;rSA.push(Math.atan2(dy,dx));
+  }
+}
+
+function getPA(t){
+  t=((t%1)+1)%1;let d=t*rTL;
+  for(let i=0;i<rSL.length;i++){
+    if(d<=rSL[i]){
+      const f=d/rSL[i],p1=rPts[i],p2=rPts[i+1];
+      let a=rSA[i];
+      if(i<rSA.length-1){let da=rSA[i+1]-a;while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;a+=da*f*.5;}
+      return{x:p1.x+(p2.x-p1.x)*f,y:p1.y+(p2.y-p1.y)*f,a};
+    }
+    d-=rSL[i];
+  }
+  return{...rPts[0],a:rSA[0]};
+}
+
+function drawCar(cx,cy,angle,color,num){
+  rx.save();rx.translate(cx,cy);rx.rotate(angle+Math.PI/2);
+  const cl=16,cw=7;
+  // Shadow
+  rx.save();rx.translate(1,1);rx.fillStyle='rgba(0,0,0,0.5)';rx.beginPath();rx.ellipse(0,0,cw*.7,cl*.55,0,0,Math.PI*2);rx.fill();rx.restore();
+  // Rear wing
+  rx.fillStyle=color;rx.fillRect(-cw-2,-cl*.35,2,5);rx.fillRect(cw,-cl*.35,2,5);
+  // Body
+  rx.beginPath();rx.ellipse(0,0,cw*.75,cl*.52,0,0,Math.PI*2);rx.fillStyle=color;rx.fill();
+  // Cockpit
+  rx.beginPath();rx.ellipse(0,0,cw*.32,cl*.22,0,0,Math.PI*2);rx.fillStyle='rgba(0,0,0,0.75)';rx.fill();
+  // Nose
+  rx.beginPath();rx.moveTo(-cw*.25,-cl*.5);rx.lineTo(0,-cl*.75);rx.lineTo(cw*.25,-cl*.5);rx.closePath();rx.fillStyle=color;rx.fill();
+  // Front wing
+  rx.fillStyle=color;rx.fillRect(-cw-1,-cl*.65,cw*2+2,2.5);
+  // Wheels
+  [[cw*.78,-cl*.35],[-cw*.78,-cl*.35],[cw*.78,cl*.25],[-cw*.78,cl*.25]].forEach(([x,y])=>{
+    rx.beginPath();rx.ellipse(x,y,2.5,3,0,0,Math.PI*2);rx.fillStyle='#111';rx.fill();rx.strokeStyle='#555';rx.lineWidth=.8;rx.stroke();
+  });
+  // Glow outline
+  rx.beginPath();rx.ellipse(0,0,cw*.75,cl*.52,0,0,Math.PI*2);rx.strokeStyle='rgba(255,255,255,0.45)';rx.lineWidth=1;rx.stroke();
+  // Number
+  rx.fillStyle='rgba(255,255,255,0.9)';rx.font='bold 5px Arial';rx.textAlign='center';rx.textBaseline='middle';rx.fillText(num,0,2);
+  rx.restore();
+}
+
+function drawScene(){
+  rx.clearRect(0,0,RW,RH);
+  rx.fillStyle='#0d1f0d';rx.fillRect(0,0,RW,RH);
+  rx.strokeStyle='rgba(255,255,255,0.025)';rx.lineWidth=1;
+  for(let x=0;x<RW;x+=40){rx.beginPath();rx.moveTo(x,0);rx.lineTo(x,RH);rx.stroke();}
+  for(let y=0;y<RH;y+=40){rx.beginPath();rx.moveTo(0,y);rx.lineTo(RW,y);rx.stroke();}
+  if(!rPts.length)return;
+  function tl(w,s,d=[]){rx.beginPath();rx.moveTo(rPts[0].x,rPts[0].y);for(let i=1;i<rPts.length;i++)rx.lineTo(rPts[i].x,rPts[i].y);rx.closePath();rx.strokeStyle=s;rx.lineWidth=w;rx.lineJoin='round';rx.lineCap='round';rx.setLineDash(d);rx.stroke();rx.setLineDash([]);}
+  tl(30,'rgba(0,80,0,0.25)');tl(24,'#1e1e1e');tl(20,'#252525');tl(1,'rgba(255,255,100,0.1)',[10,12]);tl(22,'rgba(255,255,255,0.06)');tl(14,'#1a1a1a');
+  // Start/finish line
+  const sf=rPts[0],sf2=rPts[1],ang=Math.atan2(sf2.y-sf.y,sf2.x-sf.x)+Math.PI/2;
+  rx.save();rx.translate(sf.x,sf.y);rx.rotate(ang);
+  for(let i=0;i<8;i++){rx.fillStyle=i%2===0?'#ff3333':'#fff';rx.fillRect(-13,i*3.5-14,13,3.5);rx.fillStyle=i%2===0?'#fff':'#ff3333';rx.fillRect(0,i*3.5-14,13,3.5);}
+  rx.restore();
+  // Trails
+  rDrivers.forEach((d,i)=>{
+    const trail=rTrails[i];if(!trail||trail.length<2)return;
+    const col=(TEAMS[d.team]||{color:'#888'}).color;
+    for(let t=trail.length-1;t>1;t--){
+      const alpha=(t/trail.length)*.45,size=(t/trail.length)*3.5;
+      rx.beginPath();rx.arc(trail[t].x,trail[t].y,size,0,Math.PI*2);
+      rx.fillStyle=col+Math.floor(alpha*255).toString(16).padStart(2,'0');rx.fill();
+    }
+  });
+  // Cars
+  rDrivers.map((_,i)=>({i,p:rProg[i]})).sort((a,b)=>a.p-b.p).forEach(({i})=>{
+    const t=(rProg[i]%1+1)%1,{x,y,a}=getPA(t);
+    const col=(TEAMS[rDrivers[i].team]||{color:'#888'}).color;
+    drawCar(x,y,a,col,rDrivers[i].num.replace('#',''));
+  });
+  // Watermark
+  rx.fillStyle='rgba(255,255,255,0.02)';rx.font='bold '+Math.floor(RW/6)+'px Arial';
+  rx.textAlign='center';rx.textBaseline='middle';rx.fillText(rCirc?rCirc.name:'',RW/2,RH/2);
+}
+
+function replayLoop(ts){
+  if(!rRunning)return;
+  const delta=Math.min(ts-rLT,80)*rSpeed;rLT=ts;
+  rDrivers.forEach((_,i)=>{
+    if(rProg[i]>=LAPS)return;
+    rProg[i]=Math.min(LAPS,rProg[i]+(rVel[i]*delta)/7500);
+    const t=(rProg[i]%1+1)%1,pos=getPA(t);
+    rTrails[i].push({x:pos.x,y:pos.y});if(rTrails[i].length>28)rTrails[i].shift();
+  });
+  const maxP=Math.max(...rDrivers.map((_,i)=>rProg[i]));
+  document.getElementById('replayLap').textContent='LAP '+Math.min(Math.ceil(maxP),LAPS)+' / '+LAPS;
+  document.getElementById('progressFill').style.width=(maxP/LAPS*100)+'%';
+  if(Math.random()>.97){const i=Math.floor(Math.random()*rDrivers.length);rVel[i]=Math.random()>.5?1.8+Math.random()*1.2:.4+Math.random()*.6;}
+  drawScene();
+  if(Math.min(...rDrivers.map((_,i)=>rProg[i]))>=LAPS-.02){rRunning=false;document.getElementById('replayInfo').textContent='RACE COMPLETE — HIT RESTART TO WATCH AGAIN';return;}
+  rAnim=requestAnimationFrame(replayLoop);
+}
+
+let currentReplayRace=null;
+function openReplay(raceNum){
+  const results=JSON.parse(localStorage.getItem('gc_results')||'[]');
+  const race=results.find(r=>r.race===raceNum);if(!race)return;
+  currentReplayRace=raceNum;
+  rCirc=CIRCUITS.find(c=>c.name===race.circuit)||CIRCUITS[0];
+  buildRP(rCirc);
+  rDrivers=race.order.map(r=>({num:r.num,ig:r.ig,team:r.team}));
+  rProg=rDrivers.map(()=>0);
+  // Seed velocities so winner tends to be fast but with randomness
+  rVel=rDrivers.map((_,i)=>(1.15-(i*.035))*(0.82+Math.random()*.36));
+  rTrails=rDrivers.map(()=>[]);
+  rSpeed=1;
+  document.getElementById('speedBtn').textContent='2X SPEED';
+  document.getElementById('replayTitleTxt').textContent='RACE '+raceNum+' REPLAY  '+( race.flag||'')+' '+race.circuit;
+  document.getElementById('replayInfo').textContent=(race.flag||'')+'  '+race.circuit+'  —  3 LAPS';
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('replayLap').textContent='LAP 0 / 3';
+  // Leaderboard
+  const lb=document.getElementById('replayLB');lb.innerHTML='';
+  race.order.forEach((r,rank)=>{
+    const team=TEAMS[r.team]||{color:'#888'};
+    const row=document.createElement('div');row.className='rlb-row'+(rank===0?' p1':'');
+    row.innerHTML='<span class="rlb-pos">P'+(rank+1)+'</span><span class="rlb-dot" style="background:'+team.color+'"></span><span class="rlb-name">'+r.ig+'</span><span class="rlb-pts">+'+r.points+'</span>';
+    lb.appendChild(row);
+  });
+  document.getElementById('replayOverlay').classList.add('show');
+  cancelAnimationFrame(rAnim);rRunning=true;rLT=performance.now();
+  rAnim=requestAnimationFrame(replayLoop);
+}
+
+function closeReplay(){cancelAnimationFrame(rAnim);rRunning=false;document.getElementById('replayOverlay').classList.remove('show');}
+function restartReplay(){cancelAnimationFrame(rAnim);rRunning=false;openReplay(currentReplayRace);}
+function toggleSpeed(){rSpeed=rSpeed===1?2:1;document.getElementById('speedBtn').textContent=rSpeed===2?'1X SPEED':'2X SPEED';}
+
+render();
+</script>
+</body>
+</html>
