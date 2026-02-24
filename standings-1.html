@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GRID CHAOS - Championship Standings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--red:#ff2b2b;--yellow:#ffe600;--green:#00ff6a;--white:#f5f5f5;--black:#0a0a0a;--grey:#1a1a1a}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--black);color:var(--white);font-family:'VT323',monospace;font-size:20px;min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);pointer-events:none;z-index:999}
+    nav{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:4px solid var(--yellow);flex-wrap:wrap;gap:10px}
+    .nav-logo{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--red);text-shadow:2px 2px 0 var(--yellow);text-decoration:none}
+    .nav-links{display:flex;gap:8px;flex-wrap:wrap}
+    .nav-link{font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 11px;background:var(--grey);color:var(--yellow);text-decoration:none;border:2px solid var(--yellow)}
+    .nav-link:hover{background:var(--yellow);color:var(--black)}
+    header{text-align:center;padding:32px 20px 20px;border-bottom:3px solid #222;position:relative;overflow:hidden}
+    header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(255,230,0,0.02) 80px,rgba(255,230,0,0.02) 82px)}
+    header h1{font-family:'Press Start 2P',monospace;font-size:clamp(14px,3vw,26px);color:var(--yellow);text-shadow:4px 4px 0 var(--red);position:relative}
+    .subtitle{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--red);margin-top:10px;position:relative}
+    .content{max-width:760px;margin:0 auto;padding:28px 18px}
+    .races-info{font-family:'Press Start 2P',monospace;font-size:8px;color:#444;text-align:center;margin-bottom:24px}
+    .section-title{font-family:'Press Start 2P',monospace;font-size:clamp(11px,2vw,17px);color:var(--yellow);text-align:center;margin-bottom:28px}
+    .section-title::after{content:'';display:block;width:60px;height:4px;background:var(--red);margin:12px auto 0}
+    .no-data{text-align:center;padding:60px 20px}
+    .no-data p{font-family:'Press Start 2P',monospace;font-size:11px;color:#333;line-height:2.5}
+
+    /* STANDINGS TABLE */
+    .standings-table{display:flex;flex-direction:column;gap:6px}
+    .standing-row{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--grey);border-left:4px solid #333;position:relative;overflow:hidden;transition:transform .1s}
+    .standing-row:hover{transform:translateX(4px)}
+    .standing-row.rank1{border-left-color:var(--yellow);background:rgba(255,230,0,0.06)}
+    .standing-row.rank2{border-left-color:#aaa;background:rgba(170,170,170,0.04)}
+    .standing-row.rank3{border-left-color:#cd7f32;background:rgba(205,127,50,0.04)}
+    .bar-bg{position:absolute;left:0;top:0;bottom:0;background:rgba(255,230,0,0.03);transition:width 1.2s ease;pointer-events:none}
+    .rank-num{font-family:'Press Start 2P',monospace;font-size:13px;width:34px;flex-shrink:0;position:relative;z-index:1;color:#444}
+    .rank1 .rank-num{color:var(--yellow)}.rank2 .rank-num{color:#aaa}.rank3 .rank-num{color:#cd7f32}
+    .medal{font-size:20px;width:26px;flex-shrink:0;position:relative;z-index:1}
+    .team-dot-lg{width:14px;height:14px;border-radius:50%;flex-shrink:0;position:relative;z-index:1}
+    .driver-info{flex:1;position:relative;z-index:1}
+    .driver-ig-s{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--white)}
+    .driver-sub-s{font-size:16px;color:#555;margin-top:2px}
+    .pts-big{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--yellow);position:relative;z-index:1}
+    .pts-label{font-size:14px;color:#555}
+
+    /* RACE HISTORY MINI */
+    .race-dots{display:flex;gap:4px;flex-wrap:wrap;position:relative;z-index:1}
+    .race-dot{width:20px;height:20px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--black);font-family:'Press Start 2P',monospace;font-size:6px}
+
+    /* PODIUM VISUAL */
+    .podium-section{margin-bottom:36px}
+    .podium-visual{display:flex;align-items:flex-end;justify-content:center;gap:8px;height:160px;margin-bottom:8px}
+    .podium-col{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .podium-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;border:3px solid;flex-shrink:0}
+    .podium-ign{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--white);text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .podium-block{width:70px;display:flex;align-items:center;justify-content:center;border-top:3px solid}
+    .podium-block span{font-family:'Press Start 2P',monospace;font-size:10px}
+    .p1-block{height:100px;background:rgba(255,230,0,0.15);border-color:var(--yellow)}
+    .p2-block{height:74px;background:rgba(170,170,170,0.1);border-color:#aaa}
+    .p3-block{height:54px;background:rgba(205,127,50,0.1);border-color:#cd7f32}
+    .p1-block span{color:var(--yellow)}.p2-block span{color:#aaa}.p3-block span{color:#cd7f32}
+    .p1-avatar{border-color:var(--yellow)}.p2-avatar{border-color:#aaa}.p3-avatar{border-color:#cd7f32}
+
+    @keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">&#127937; GRID CHAOS</a>
+  <div class="nav-links">
+    <a href="results.html" class="nav-link">&#128203; RESULTS</a>
+    <a href="index.html" class="nav-link">&#127968; HOME</a>
+  </div>
+</nav>
+
+<header>
+  <h1>&#127942; CHAMPIONSHIP</h1>
+  <p class="subtitle">GRID CHAOS &#8212; SEASON 1 STANDINGS</p>
+</header>
+
+<div class="content">
+  <p class="races-info" id="racesInfo">LOADING...</p>
+  <div id="podiumSection" class="podium-section"></div>
+  <h2 class="section-title">// DRIVER STANDINGS</h2>
+  <div id="standingsTable" class="standings-table"></div>
+</div>
+
+<script>
+const TEAMS={
+  redbull:{name:'RED BULL',color:'#3671C6'},ferrari:{name:'FERRARI',color:'#E8002D'},
+  mercedes:{name:'MERCEDES',color:'#27F4D2'},mclaren:{name:'McLAREN',color:'#FF8000'},
+  aston:{name:'ASTON',color:'#229971'},alpine:{name:'ALPINE',color:'#0093CC'},
+  haas:{name:'HAAS',color:'#C0C0C0'},rb:{name:'RB',color:'#6692FF'},
+  williams:{name:'WILLIAMS',color:'#64C4FF'},sauber:{name:'SAUBER',color:'#52E252'}
+};
+
+const medals=['','🥇','🥈','🥉'];
+
+function render(){
+  const results=JSON.parse(localStorage.getItem('gc_results')||'[]');
+  const standings=JSON.parse(localStorage.getItem('gc_standings')||'{}');
+  const drivers=JSON.parse(localStorage.getItem('gc_drivers')||'[]');
+  const table=document.getElementById('standingsTable');
+  const racesInfo=document.getElementById('racesInfo');
+  const podSec=document.getElementById('podiumSection');
+
+  racesInfo.textContent='RACES COMPLETED: '+results.length+(results.length===0?' — NO RACES YET':'');
+
+  if(!Object.keys(standings).length){
+    table.innerHTML='<div class="no-data"><p>NO STANDINGS YET.<br><br>RACES NEED TO<br>BE PUBLISHED!</p></div>';
+    podSec.innerHTML='';return;
+  }
+
+  // Sort by points
+  const sorted=Object.entries(standings).sort((a,b)=>b[1]-a[1]);
+  const maxPts=sorted[0][1];
+
+  // Build race history per driver (pts per race)
+  const raceHistory={};
+  results.forEach(race=>{
+    race.order.forEach(r=>{
+      if(!raceHistory[r.ig])raceHistory[r.ig]=[];
+      raceHistory[r.ig].push({pos:r.position,pts:r.points,circuit:race.circuit,flag:race.flag||'🏁'});
+    });
+  });
+
+  // PODIUM VISUAL (top 3)
+  if(sorted.length>=1){
+    const top3=sorted.slice(0,Math.min(3,sorted.length));
+    const getDriver=ig=>drivers.find(d=>d.ig===ig)||{team:'redbull',num:'#00'};
+    const getColor=ig=>{const d=getDriver(ig);return(TEAMS[d.team]||{color:'#888'}).color;};
+    const p=top3.map(([ig,pts])=>({ig,pts,drv:getDriver(ig),color:getColor(ig)}));
+    // Order: 2nd, 1st, 3rd for visual
+    const order=sorted.length>=3?[p[1],p[0],p[2]]:sorted.length===2?[p[1],p[0]]:[ null,p[0],null];
+    const blocks=['p2-block','p1-block','p3-block'];
+    const avatars=['p2-avatar','p1-avatar','p3-avatar'];
+    const labels=['2ND','1ST','3RD'];
+    let podHtml='<div class="podium-visual">';
+    order.forEach((driver,vi)=>{
+      if(!driver){podHtml+='<div class="podium-col"></div>';return;}
+      podHtml+=`<div class="podium-col">
+        <div class="podium-avatar ${avatars[vi]}" style="background:${driver.color}22">${medals[vi===1?1:vi===0?2:3]}</div>
+        <div class="podium-ign">${driver.ig}</div>
+        <div class="podium-block ${blocks[vi]}"><span>${labels[vi]}</span></div>
+      </div>`;
+    });
+    podHtml+='</div>';
+    podSec.innerHTML=podHtml;
+  }
+
+  // TABLE
+  table.innerHTML='';
+  sorted.forEach(([ig,pts],rank)=>{
+    const drv=drivers.find(d=>d.ig===ig)||{team:'redbull',num:'#00'};
+    const team=TEAMS[drv.team]||{color:'#888',name:'UNKNOWN'};
+    const cls=rank===0?'rank1':rank===1?'rank2':rank===2?'rank3':'';
+    const barW=Math.round((pts/maxPts)*100);
+    const history=raceHistory[ig]||[];
+    let dotsHtml='';
+    history.forEach(h=>{
+      const bg=h.pos===1?'#ffe600':h.pos===2?'#aaa':h.pos===3?'#cd7f32':h.pos<=5?'#00ff6a':h.pos<=8?'#0093CC':'#333';
+      dotsHtml+=`<div class="race-dot" style="background:${bg}" title="${h.flag} ${h.circuit} — P${h.pos} (+${h.pts}pts)">${h.pos}</div>`;
+    });
+    const row=document.createElement('div');
+    row.className='standing-row '+cls;
+    row.style.animation='slideIn .3s ease '+(rank*.06)+'s both';
+    row.innerHTML=`
+      <div class="bar-bg" style="width:${barW}%"></div>
+      <span class="rank-num">${rank+1}</span>
+      ${rank<3?`<span class="medal">${medals[rank+1]}</span>`:'<span style="width:26px;flex-shrink:0"></span>'}
+      <span class="team-dot-lg" style="background:${team.color}"></span>
+      <div class="driver-info">
+        <div class="driver-ig-s">${ig}</div>
+        <div class="driver-sub-s">${drv.num||''} &middot; ${team.name}</div>
+        ${dotsHtml?`<div class="race-dots" style="margin-top:6px">${dotsHtml}</div>`:''}
+      </div>
+      <div><span class="pts-big">${pts}</span><span class="pts-label"> PTS</span></div>`;
+    table.appendChild(row);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
